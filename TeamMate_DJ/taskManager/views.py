@@ -8,3 +8,7 @@ def display_hello(request):
 def testing(request):
     template = loader.get_template('testing_tmpl.html')
     return HttpResponse(template.render())
+
+def display_tasks(request):
+    template = loader.get_template('taskPage.html')
+    return HttpResponse(template.render())
