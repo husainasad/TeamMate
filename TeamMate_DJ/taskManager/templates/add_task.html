@@ -1,0 +1,23 @@
+{% extends "main_tmpl.html" %}
+
+{% block title %}
+    Add Task
+{% endblock %}
+
+{% block content %}
+    <h1>Welcome User</h1>
+    <h3>Let's add a new task</h3>
+    <form method="POST">
+        <table>
+            <tbody>
+                {% for field in form %}
+                <tr>
+                    <th>{{ field.label_tag }}</th>
+                    <td>{{ field }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </form>
+    <button type="submit">Submit</button>
+{% endblock %}
