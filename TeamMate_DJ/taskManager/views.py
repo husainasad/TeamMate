@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
 from django.template import loader
+from django.urls import reverse
 from .forms import TaskForm
 
 def display_hello(request):
@@ -18,7 +19,8 @@ def add_task(request):
     if request.method == 'POST':
         form = TaskForm(request.POST)
         if form.is_valid():
-            return redirect('display_tasks')
+            form.save()
+            return redirect('tasks')
     else:
         form = TaskForm()
     return render(request, 'add_task.html', {'form':form})

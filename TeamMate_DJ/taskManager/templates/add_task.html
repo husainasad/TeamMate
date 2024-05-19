@@ -8,16 +8,13 @@
     <h1>Welcome User</h1>
     <h3>Let's add a new task</h3>
     <form method="POST">
+        {% csrf_token %}
         <table>
             <tbody>
-                {% for field in form %}
-                <tr>
-                    <th>{{ field.label_tag }}</th>
-                    <td>{{ field }}</td>
-                </tr>
-                {% endfor %}
+                {{ form.as_table }}
             </tbody>
         </table>
+        <button type="reset">Reset</button>
+        <button type="submit">Submit</button>
     </form>
-    <button type="submit">Submit</button>
 {% endblock %}

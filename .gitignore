@@ -1,3 +1,4 @@
 ProjectDesc.docx
 django-env
 **/*.env
+**/__pycache__/*

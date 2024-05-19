@@ -1,4 +1,5 @@
 from django.db import models
+from django.core.exceptions import ValidationError
 import datetime
 
 class Task(models.Model):
@@ -20,6 +21,14 @@ class Task(models.Model):
 
     def __str__(self):
         return self.title
+
+    def clean(self):
+        super().clean()
+        if self.due_date < datetime.date.today():
+            raise ValidationError("Due date cannot be in the past.")
+        if not 0 <= self.progress <= 100:
+            raise ValidationError("Progress must be between 0 and 100.")
+    
     
 class Tag(models.Model):
     name = models.CharField(max_length=50, unique=True)
