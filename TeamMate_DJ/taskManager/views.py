@@ -37,3 +37,11 @@ def completed_tasks(request):
         'data':all_data,
     }
     return HttpResponse(template.render(context, request))
+
+def tasks_details(request, id):
+    cur_data = Task.objects.get(id=id)
+    template = loader.get_template('task_details.html')
+    context = {
+        'data':cur_data,
+    }
+    return HttpResponse(template.render(context, request))
