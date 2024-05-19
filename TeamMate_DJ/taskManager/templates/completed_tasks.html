@@ -1,12 +1,12 @@
 {% extends "main_tmpl.html" %}
 
 {% block title %}
-    Task History
+    All tasks
 {% endblock %}
 
 {% block content %}
     <h1>Welcome User</h1>
-    <h3>Pending Tasks</h3>
+    <h3>Completed Tasks</h3>
     <table>
         <tr>
             <th>Title</th>
@@ -23,8 +23,4 @@
         </tr>
         {% endfor %}
     </table>
-    <a href= {% url 'completed tasks' %}><button type="button">Completed Tasks</button></a>
-    <a href= {% url 'add task' %}><button type="button">Add Task</button></a>
-    <button type="button">Update Task</button>
-    <button type="button">Remove Task</button>
 {% endblock %}

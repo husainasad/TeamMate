@@ -3,6 +3,7 @@ from django.http import HttpResponse
 from django.template import loader
 from django.urls import reverse
 from .forms import TaskForm
+from .models import Task
 
 def display_hello(request):
     return HttpResponse('Hello World!')
@@ -12,15 +13,27 @@ def testing(request):
     return HttpResponse(template.render())
 
 def display_tasks(request):
+    all_data = Task.objects.filter(progress__lt=100)
     template = loader.get_template('taskPage.html')
-    return HttpResponse(template.render())
+    context = {
+        'data':all_data,
+    }
+    return HttpResponse(template.render(context, request))
 
 def add_task(request):
     if request.method == 'POST':
         form = TaskForm(request.POST)
         if form.is_valid():
             form.save()
-            return redirect('tasks')
+            return redirect('pending tasks')
     else:
         form = TaskForm()
     return render(request, 'add_task.html', {'form':form})
+
+def completed_tasks(request):
+    all_data = Task.objects.filter(progress=100)
+    template = loader.get_template('completed_tasks.html')
+    context = {
+        'data':all_data,
+    }
+    return HttpResponse(template.render(context, request))

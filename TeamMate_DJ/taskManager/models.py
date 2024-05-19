@@ -28,6 +28,9 @@ class Task(models.Model):
             raise ValidationError("Due date cannot be in the past.")
         if not 0 <= self.progress <= 100:
             raise ValidationError("Progress must be between 0 and 100.")
+        
+    class Meta:
+        ordering = ('-priority', 'due_date', 'progress',)
     
     
 class Tag(models.Model):
