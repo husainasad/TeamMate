@@ -1,9 +1,8 @@
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
 from django.template import loader
-from django.urls import reverse
 from .forms import TaskForm
-from .models import Task
+from .models import Task, Tag
 
 def display_hello(request):
     return HttpResponse('Hello World!')
@@ -23,8 +22,22 @@ def display_tasks(request):
 def add_task(request):
     if request.method == 'POST':
         form = TaskForm(request.POST)
+        
         if form.is_valid():
-            form.save()
+            task = form.save(commit=False)
+
+            tags_input = form.cleaned_data.get('tags', '')
+            tag_names = [tag.strip() for tag in tags_input.split(',') if tag.strip()]
+            tags = []
+
+            for tag_name in tag_names:
+                tag, created = Tag.objects.get_or_create(name=tag_name)
+                tags.append(tag)
+
+            task.save()
+            task.tags.add(*tags)
+            task.save()
+
             return redirect('pending tasks')
     else:
         form = TaskForm()

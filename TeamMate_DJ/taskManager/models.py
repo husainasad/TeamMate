@@ -30,7 +30,7 @@ class Task(models.Model):
             raise ValidationError("Progress must be between 0 and 100.")
         
     class Meta:
-        ordering = ('-priority', 'due_date', 'progress',)
+        ordering = ('due_date','priority','progress',)
     
     
 class Tag(models.Model):

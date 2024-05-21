@@ -22,7 +22,12 @@
             <td>{{data.priority}}</td>
             <td>{{data.progress}}</td>
             <td>{{data.due_date}}</td>
-            <td>{{data.tags}}</td>
+            <td>
+                {% for tag in data.tags.all %}
+                    {{ tag.name }}
+                    {% if not forloop.last %}, {% endif %}
+                {% endfor %}
+            </td>
         </tr>
     </table>
 {% endblock %}
