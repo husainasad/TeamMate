@@ -41,6 +41,7 @@ def add_task(request):
             return redirect('pending tasks')
     else:
         form = TaskForm()
+    
     return render(request, 'add_task.html', {'form':form})
 
 def completed_tasks(request):
@@ -58,3 +59,29 @@ def tasks_details(request, id):
         'data':cur_data,
     }
     return HttpResponse(template.render(context, request))
+
+def update_task(request, id):
+    cur_task = Task.objects.get(id=id)
+
+    if request.method == 'POST':
+        form = TaskForm(request.POST, instance=cur_task)
+
+        if form.is_valid():
+            updated_task = form.save(commit=False)
+
+            tags_input = form.cleaned_data.get('tags', '')
+            tag_names = [tag.strip() for tag in tags_input.split(',') if tag.strip()]
+            updated_tags = []
+
+            for tag_name in tag_names:
+                tag, created = Tag.objects.get_or_create(name=tag_name)
+                updated_tags.append(tag)
+
+            updated_task.save()
+            updated_task.tags.set(updated_tags)
+
+            return redirect('task details', id=id)
+    else:
+        form = form = TaskForm(instance=cur_task)
+
+    return render(request, 'update_task.html', {'form':form})
