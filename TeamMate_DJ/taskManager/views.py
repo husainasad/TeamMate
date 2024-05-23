@@ -38,7 +38,7 @@ def add_task(request):
             task.tags.add(*tags)
             task.save()
 
-            return redirect('pending tasks')
+            return redirect('tasks_list')
     else:
         form = TaskForm()
     
@@ -80,7 +80,7 @@ def update_task(request, id):
             updated_task.save()
             updated_task.tags.set(updated_tags)
 
-            return redirect('task details', id=id)
+            return redirect('task_details', id=id)
     else:
         form = TaskForm(instance=cur_task)
 
@@ -97,4 +97,4 @@ def delete_task(request, id):
             cur_task.tags.remove(tag)
 
     cur_task.delete()
-    return redirect('pending tasks')
+    return redirect('tasks_details')

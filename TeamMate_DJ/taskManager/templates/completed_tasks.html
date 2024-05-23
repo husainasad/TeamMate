@@ -17,11 +17,11 @@
         </tr>
         {% for x in data %}
         <tr>
-            <td><a href={% url 'task details' id=x.id %}>{{x.title}}</a></td>
+            <td><a href={% url 'task_details' id=x.id %}>{{x.title}}</a></td>
             <td>{{x.priority}}</td>
             <td>{{x.progress}}</td>
             <td>{{x.due_date}}</td>
-            <td><a href={% url 'delete task' id=x.id %}>delete</a></td>
+            <td><a href={% url 'delete_task' id=x.id %}>delete</a></td>
         </tr>
         {% endfor %}
     </table>
