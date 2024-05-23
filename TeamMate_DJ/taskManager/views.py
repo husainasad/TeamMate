@@ -82,6 +82,19 @@ def update_task(request, id):
 
             return redirect('task details', id=id)
     else:
-        form = form = TaskForm(instance=cur_task)
+        form = TaskForm(instance=cur_task)
 
     return render(request, 'update_task.html', {'form':form})
+
+def delete_task(request, id):
+    cur_task = Task.objects.get(id=id)
+    associated_tags = cur_task.tags.all()
+
+    for tag in associated_tags:
+        if Task.objects.filter(tags=tag).count() == 1:
+            tag.delete()
+        else:
+            cur_task.tags.remove(tag)
+
+    cur_task.delete()
+    return redirect('pending tasks')
