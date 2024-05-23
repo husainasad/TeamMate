@@ -6,7 +6,18 @@
 
 {% block content %}
     <h1>Welcome User</h1>
-    <h3>Pending Tasks</h3>
+    <h3>Tasks</h3>
+
+    <form action="{% url 'display_tasks' %}" method="GET">
+        Filter by Status:
+        <select name="status">
+            <option value="all">All</option>
+            <option value="pending">Pending</option>
+            <option value="completed">Completed</option>
+        </select>
+        <button type="submit">Apply</button>
+    </form>
+
     <table border="1">
         <tr>
             <th>Title</th>
@@ -25,6 +36,5 @@
         </tr>
         {% endfor %}
     </table>
-    <a href= {% url 'completed_tasks' %}><button type="button">Completed Tasks</button></a>
     <a href= {% url 'add_task' %}><button type="button">Add Task</button></a>
 {% endblock %}

@@ -12,10 +12,18 @@ def testing(request):
     return HttpResponse(template.render())
 
 def display_tasks(request):
-    all_data = Task.objects.filter(progress__lt=100)
+
+    tasks = Task.objects.all()
+    status_filter = request.GET.get('status')
+
+    if(status_filter=='completed'):
+        tasks = tasks.filter(progress=100)
+    elif(status_filter=='pending'):
+        tasks = tasks.filter(progress__lt=100)
+
     template = loader.get_template('taskPage.html')
     context = {
-        'data':all_data,
+        'data':tasks,
     }
     return HttpResponse(template.render(context, request))
 
@@ -38,19 +46,11 @@ def add_task(request):
             task.tags.add(*tags)
             task.save()
 
-            return redirect('tasks_list')
+            return redirect('tasks_details', id=task.id)
     else:
         form = TaskForm()
     
     return render(request, 'add_task.html', {'form':form})
-
-def completed_tasks(request):
-    all_data = Task.objects.filter(progress=100)
-    template = loader.get_template('completed_tasks.html')
-    context = {
-        'data':all_data,
-    }
-    return HttpResponse(template.render(context, request))
 
 def tasks_details(request, id):
     cur_data = Task.objects.get(id=id)
@@ -97,4 +97,4 @@ def delete_task(request, id):
             cur_task.tags.remove(tag)
 
     cur_task.delete()
-    return redirect('tasks_details')
+    return redirect('tasks_list')
