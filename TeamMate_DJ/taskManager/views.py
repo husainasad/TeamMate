@@ -46,7 +46,7 @@ def add_task(request):
             task.tags.add(*tags)
             task.save()
 
-            return redirect('tasks_details', id=task.id)
+            return redirect('task_details', id=task.id)
     else:
         form = TaskForm()
     
@@ -97,4 +97,4 @@ def delete_task(request, id):
             cur_task.tags.remove(tag)
 
     cur_task.delete()
-    return redirect('tasks_list')
+    return redirect('display_tasks')
