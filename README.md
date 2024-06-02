@@ -8,4 +8,5 @@ Django Commands Cheatsheet:<br>
 * Create DB using command ```python manage.py makemigrations {app_name}```
 * Insert in using command ```python manage.py shell```
 * Create superuser using command ```python manage.py createsuperuser```
-* Collect static files using command ```py manage.py collectstatic```
+* Collect static files using command ```python manage.py collectstatic```
+* Test Django application using command ```python manage.py test```
