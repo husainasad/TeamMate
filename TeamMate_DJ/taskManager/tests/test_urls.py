@@ -3,7 +3,7 @@ from django.urls import reverse, resolve
 from taskManager.models import Task, Tag
 from taskManager.views import (
     display_hello, testing, display_tasks, add_task, 
-    tasks_details, update_task, delete_task
+    task_details, update_task, delete_task
 )
 
 class URLTests(TestCase):
@@ -33,7 +33,7 @@ class URLTests(TestCase):
 
     def test_task_details(self):
         found = resolve(f'/tasks/{self.task.id}')
-        self.assertEqual(found.func, tasks_details)
+        self.assertEqual(found.func, task_details)
 
     def test_update_task(self):
         found = resolve(f'/tasks/{self.task.id}/update')

@@ -1,8 +1,23 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import get_object_or_404, redirect, render
 from django.http import HttpResponse
 from django.template import loader
 from .forms import TaskForm
 from .models import Task, Tag
+
+def process_tags(input_tags):
+    tag_names = [tag.strip() for tag in input_tags.split(',') if tag.strip()]
+    tags = []
+    for tag_name in tag_names:
+        tag, created = Tag.objects.get_or_create(name=tag_name)
+        tags.append(tag)
+    return tags
+
+def cleanup_tags(tags, task):
+    for tag in tags:
+        if Task.objects.filter(tags=tag).count() == 1:
+            tag.delete()
+        else:
+            task.tags.remove(tag)
 
 def display_hello(request):
     return HttpResponse('Hello World!')
@@ -34,13 +49,7 @@ def add_task(request):
         if form.is_valid():
             task = form.save(commit=False)
 
-            tags_input = form.cleaned_data.get('tags', '')
-            tag_names = [tag.strip() for tag in tags_input.split(',') if tag.strip()]
-            tags = []
-
-            for tag_name in tag_names:
-                tag, created = Tag.objects.get_or_create(name=tag_name)
-                tags.append(tag)
+            tags = process_tags(form.cleaned_data.get('tags', ''))
 
             task.save()
             task.tags.add(*tags)
@@ -52,8 +61,8 @@ def add_task(request):
     
     return render(request, 'add_task.html', {'form':form})
 
-def tasks_details(request, id):
-    cur_data = Task.objects.get(id=id)
+def task_details(request, id):
+    cur_data = get_object_or_404(Task, id=id)
     template = loader.get_template('task_details.html')
     context = {
         'data':cur_data,
@@ -61,7 +70,7 @@ def tasks_details(request, id):
     return HttpResponse(template.render(context, request))
 
 def update_task(request, id):
-    cur_task = Task.objects.get(id=id)
+    cur_task = get_object_or_404(Task, id=id)
 
     if request.method == 'POST':
         form = TaskForm(request.POST, instance=cur_task)
@@ -69,14 +78,13 @@ def update_task(request, id):
         if form.is_valid():
             updated_task = form.save(commit=False)
 
-            tags_input = form.cleaned_data.get('tags', '')
-            tag_names = [tag.strip() for tag in tags_input.split(',') if tag.strip()]
-            updated_tags = []
+            updated_tags = process_tags(form.cleaned_data.get('tags', ''))
+            prev_tags = cur_task.tags.all()
 
-            for tag_name in tag_names:
-                tag, created = Tag.objects.get_or_create(name=tag_name)
-                updated_tags.append(tag)
+            prev_only_tags = [tag for tag in prev_tags if tag not in updated_tags]
 
+            cleanup_tags(prev_only_tags, cur_task)
+        
             updated_task.save()
             updated_task.tags.set(updated_tags)
 
@@ -87,14 +95,10 @@ def update_task(request, id):
     return render(request, 'update_task.html', {'form':form})
 
 def delete_task(request, id):
-    cur_task = Task.objects.get(id=id)
+    cur_task = get_object_or_404(Task, id=id)
     associated_tags = cur_task.tags.all()
 
-    for tag in associated_tags:
-        if Task.objects.filter(tags=tag).count() == 1:
-            tag.delete()
-        else:
-            cur_task.tags.remove(tag)
+    cleanup_tags(associated_tags, cur_task)
 
     cur_task.delete()
     return redirect('display_tasks')
