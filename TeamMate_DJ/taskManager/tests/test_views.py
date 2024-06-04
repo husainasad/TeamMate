@@ -105,7 +105,7 @@ class ViewTests(TestCase):
             'title':'newTitle',
             'description':'newDescription',
             'due_date':datetime.date.today() + datetime.timedelta(days=2),
-            'tags':'sampleTag1, sampleTag2, newTag1',
+            'tags':'sampleTag2, newTag1',
             'priority':'Medium',
             'progress':25
         })
@@ -124,8 +124,8 @@ class ViewTests(TestCase):
         self.assertEqual(cur_task.description, 'newDescription')
         self.assertEqual(cur_task.due_date, datetime.date.today() + datetime.timedelta(days=2))
         self.assertEqual(cur_task.progress, 25)
-        self.assertEqual(cur_task.tags.count(), 3)
-        self.assertTrue(Tag.objects.filter(name='sampleTag1').exists())
+        self.assertEqual(cur_task.tags.count(), 2)
+        self.assertFalse(Tag.objects.filter(name='sampleTag1').exists())
         self.assertTrue(Tag.objects.filter(name='sampleTag2').exists())
         self.assertTrue(Tag.objects.filter(name='newTag1').exists())
 
