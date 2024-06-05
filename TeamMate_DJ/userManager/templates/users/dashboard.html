@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    Task Dashboard
+{% endblock %}
+
+{% block content %}
+<div>
+    {% if user.is_authenticated %}
+        <h2>Welcome, {{ user.username}}!</h2>
+        <form action="{% url 'logout' %}" method="post">
+            {% csrf_token %}
+            <input type="submit" value="Log Out">
+        </form>
+    {% else %}
+        <h2>You are not logged in yet!</h2>
+        <form action="{% url 'login' %}">
+            <input type="submit" value="Log In">
+        </form>
+        <!-- <a href="{% url 'login' %}">Login</a> -->
+    {% endif %}
+</div>
+{% endblock %}
