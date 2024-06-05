@@ -1,4 +1,5 @@
 from django.shortcuts import get_object_or_404, redirect, render
+from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from django.template import loader
 from .forms import TaskForm
@@ -26,6 +27,7 @@ def testing(request):
     template = loader.get_template('testing_tmpl.html')
     return HttpResponse(template.render())
 
+@login_required
 def display_tasks(request):
 
     tasks = Task.objects.all()
@@ -42,6 +44,7 @@ def display_tasks(request):
     }
     return HttpResponse(template.render(context, request))
 
+@login_required
 def add_task(request):
     if request.method == 'POST':
         form = TaskForm(request.POST)
@@ -61,6 +64,7 @@ def add_task(request):
     
     return render(request, 'add_task.html', {'form':form})
 
+@login_required
 def task_details(request, id):
     cur_data = get_object_or_404(Task, id=id)
     template = loader.get_template('task_details.html')
@@ -69,6 +73,7 @@ def task_details(request, id):
     }
     return HttpResponse(template.render(context, request))
 
+@login_required
 def update_task(request, id):
     cur_task = get_object_or_404(Task, id=id)
 
@@ -94,6 +99,7 @@ def update_task(request, id):
 
     return render(request, 'update_task.html', {'form':form})
 
+@login_required
 def delete_task(request, id):
     cur_task = get_object_or_404(Task, id=id)
     associated_tags = cur_task.tags.all()

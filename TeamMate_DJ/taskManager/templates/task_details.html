@@ -29,10 +29,6 @@
             </td>
         </tr>
     </table>
-    <form action="{% url 'display_tasks' %}">
-        <button>Go Back</button>
-    </form>
-    <form action={% url 'update_task' id=data.id %}>
-        <button>Update Task</button>
-    </form>
+    <a href= {% url 'display_tasks' %}><button type="button">Go Back</button></a>
+    <a href= {% url 'update_task' id=data.id %}><button type="button">Update Task</button></a>
 {% endblock %}

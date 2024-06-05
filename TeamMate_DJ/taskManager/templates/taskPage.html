@@ -35,5 +35,6 @@
         </tr>
         {% endfor %}
     </table>
+    <a href= {% url 'dashboard' %}><button type="button">Back to Dashboard</button></a>
     <a href= {% url 'add_task' %}><button type="button">Add Task</button></a>
 {% endblock %}

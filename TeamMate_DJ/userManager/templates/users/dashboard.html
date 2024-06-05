@@ -8,6 +8,7 @@
 <div>
     {% if user.is_authenticated %}
         <h2>Welcome, {{ user.username}}!</h2>
+        <a href= {% url 'display_tasks' %}><button type="button">Go to Task Board</button></a>
         <form action="{% url 'logout' %}" method="post">
             {% csrf_token %}
             <input type="submit" value="Log Out">
