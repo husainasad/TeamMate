@@ -1,7 +1,6 @@
 from django.shortcuts import get_object_or_404, redirect, render
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
-from django.template import loader
 from .forms import TaskForm
 from .models import Task, Tag
 
@@ -24,8 +23,7 @@ def display_hello(request):
     return HttpResponse('Hello World!')
 
 def testing(request):
-    template = loader.get_template('testing_tmpl.html')
-    return HttpResponse(template.render())
+    return render(request, 'testing_tmpl.html')  
 
 @login_required
 def display_tasks(request):
@@ -38,11 +36,7 @@ def display_tasks(request):
     elif(status_filter=='pending'):
         tasks = tasks.filter(progress__lt=100)
 
-    template = loader.get_template('taskPage.html')
-    context = {
-        'data':tasks,
-    }
-    return HttpResponse(template.render(context, request))
+    return render(request, 'taskPage.html', {'data': tasks})
 
 @login_required
 def add_task(request):
@@ -66,12 +60,8 @@ def add_task(request):
 
 @login_required
 def task_details(request, id):
-    cur_data = get_object_or_404(Task, id=id)
-    template = loader.get_template('task_details.html')
-    context = {
-        'data':cur_data,
-    }
-    return HttpResponse(template.render(context, request))
+    task = get_object_or_404(Task, id=id)
+    return render(request, 'task_details.html', {'data': task})
 
 @login_required
 def update_task(request, id):
