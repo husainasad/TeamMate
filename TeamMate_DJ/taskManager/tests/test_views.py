@@ -1,5 +1,6 @@
 from django.test import TestCase, Client
 from django.urls import reverse
+from django.contrib.auth.models import User
 from taskManager.models import Task, Tag
 from taskManager.forms import TaskForm
 import datetime
@@ -9,6 +10,9 @@ class ViewTests(TestCase):
         # Create view client
         self.client = Client()
         
+        # Create a user
+        self.user = User.objects.create_user(username='testuser', password='testpassword')
+
         # Create sample tasks
         self.task1 = Task.objects.create(
             title="sampleTitle1", 
@@ -28,8 +32,15 @@ class ViewTests(TestCase):
         # Add tags to tasks
         self.task1.tags.add(self.tag1)
         self.task2.tags.add(self.tag2)
+    
+    def test_display_tasks_unauthenticated(self):
+        response = self.client.get(reverse('display_tasks'))
+        self.assertRedirects(response, f"{reverse('login')}?next={reverse('display_tasks')}")
 
     def test_display_tasks(self):
+        # Simulate log in
+        self.client.login(username='testuser', password='testpassword')
+
         # Display tasks page
         response = self.client.get(reverse('display_tasks'))
 
@@ -45,7 +56,13 @@ class ViewTests(TestCase):
         response = self.client.get(reverse('display_tasks'), {'status': 'pending'})
         self.assertEqual(response.status_code, 200)
 
+    def test_add_task_get_unauthenticated(self):
+        response = self.client.get(reverse('add_task'))
+        self.assertRedirects(response, f"{reverse('login')}?next={reverse('add_task')}")
+
     def test_add_task_get(self):
+        self.client.login(username='testuser', password='testpassword')
+
         # Display add task page
         response = self.client.get(reverse('add_task'))
         
@@ -54,7 +71,21 @@ class ViewTests(TestCase):
         self.assertTemplateUsed(response, 'add_task.html')
         self.assertIsInstance(response.context['form'], TaskForm)
 
+    def test_add_task_post_unauthenticated(self):
+        response = self.client.post(reverse('add_task'),{
+            'title':'title1',
+            'description':'description1',
+            'due_date':datetime.date.today() + datetime.timedelta(days=1),
+            'tags':'tag1, tag2, tag3',
+            'priority':'Low',
+            'progress':25
+        })
+
+        self.assertRedirects(response, f"{reverse('login')}?next={reverse('add_task')}")
+
     def test_add_task_post(self):
+        self.client.login(username='testuser', password='testpassword')
+
         # Add new task
         response = self.client.post(reverse('add_task'),{
             'title':'title1',
@@ -81,7 +112,13 @@ class ViewTests(TestCase):
         self.assertTrue(Tag.objects.filter(name='tag2').exists())
         self.assertTrue(Tag.objects.filter(name='tag3').exists())
 
+    def test_task_details_unauthenticated(self):
+        response = self.client.get(reverse('task_details', args=[self.task1.id]))
+        self.assertRedirects(response, f"{reverse('login')}?next={reverse('task_details', args=[self.task1.id])}")
+
     def test_task_details(self):
+        self.client.login(username='testuser', password='testpassword')
+
         # Display task details
         response = self.client.get(reverse('task_details', args=[self.task1.id]))
 
@@ -90,7 +127,13 @@ class ViewTests(TestCase):
         self.assertTemplateUsed(response, 'task_details.html')
         self.assertEqual(response.context['data'], self.task1)
 
+    def test_update_task_get_unauthenticated(self):
+        response = self.client.get(reverse('update_task', args=[self.task1.id]))
+        self.assertRedirects(response, f"{reverse('login')}?next={reverse('update_task', args=[self.task1.id])}")
+
     def test_update_task_get(self):
+        self.client.login(username='testuser', password='testpassword')
+
         # Display update task page
         response = self.client.get(reverse('update_task', args=[self.task1.id]))
 
@@ -99,7 +142,21 @@ class ViewTests(TestCase):
         self.assertTemplateUsed(response, 'update_task.html')
         self.assertIsInstance(response.context['form'], TaskForm)
 
+    def test_update_task_post_unauthenticated(self):
+        response = self.client.post(reverse('update_task', args=[self.task1.id]),{
+            'title':'newTitle',
+            'description':'newDescription',
+            'due_date':datetime.date.today() + datetime.timedelta(days=2),
+            'tags':'sampleTag2, newTag1',
+            'priority':'Medium',
+            'progress':25
+        })
+
+        self.assertRedirects(response, f"{reverse('login')}?next={reverse('update_task', args=[self.task1.id])}")
+
     def test_update_task_post(self):
+        self.client.login(username='testuser', password='testpassword')
+
         # Update a task
         response = self.client.post(reverse('update_task', args=[self.task1.id]),{
             'title':'newTitle',
@@ -129,7 +186,13 @@ class ViewTests(TestCase):
         self.assertTrue(Tag.objects.filter(name='sampleTag2').exists())
         self.assertTrue(Tag.objects.filter(name='newTag1').exists())
 
+    def test_delete_task_unauthenticated(self):
+        response = self.client.get(reverse('delete_task', args=[self.task1.id]))
+        self.assertRedirects(response, f"{reverse('login')}?next={reverse('delete_task', args=[self.task1.id])}")
+
     def test_delete_task(self):
+        self.client.login(username='testuser', password='testpassword')
+
         # Create another task with the same tag to test the tag deletion logic
         dummy_task = Task.objects.create(
                         title="dummy title", 

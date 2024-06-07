@@ -13,6 +13,8 @@ def register(request):
             user = form.save()
             login(request, user)
             return redirect(reverse("dashboard"))
+        else:
+            print(form.errors)
     else:
         return render(
             request, "users/register.html",
