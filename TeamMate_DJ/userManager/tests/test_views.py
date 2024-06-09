@@ -1,6 +1,6 @@
 from django.test import TestCase, Client
 from django.urls import reverse
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from userManager.forms import CustomUserCreationForm
 
 class ViewTests(TestCase):
@@ -27,7 +27,8 @@ class ViewTests(TestCase):
         })
             
         self.assertEqual(response.status_code, 302)
-
+        
+        User = get_user_model()
         user_exists = User.objects.filter(username='sampleUser').exists()
         self.assertTrue(user_exists)
 

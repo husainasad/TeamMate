@@ -28,7 +28,7 @@ def testing(request):
 @login_required
 def display_tasks(request):
 
-    tasks = Task.objects.all()
+    tasks = Task.objects.filter(owner=request.user)
     status_filter = request.GET.get('status')
 
     if(status_filter=='completed'):
@@ -45,12 +45,12 @@ def add_task(request):
         
         if form.is_valid():
             task = form.save(commit=False)
+            task.owner = request.user
 
             tags = process_tags(form.cleaned_data.get('tags', ''))
 
             task.save()
-            task.tags.add(*tags)
-            task.save()
+            task.tags.set(tags)
 
             return redirect('task_details', id=task.id)
     else:
@@ -66,6 +66,9 @@ def task_details(request, id):
 @login_required
 def update_task(request, id):
     cur_task = get_object_or_404(Task, id=id)
+
+    if cur_task.owner != request.user:
+        return HttpResponse('Unauthorized', status=401)
 
     if request.method == 'POST':
         form = TaskForm(request.POST, instance=cur_task)
@@ -92,6 +95,10 @@ def update_task(request, id):
 @login_required
 def delete_task(request, id):
     cur_task = get_object_or_404(Task, id=id)
+
+    if cur_task.owner != request.user:
+        return HttpResponse('Unauthorized', status=401)
+    
     associated_tags = cur_task.tags.all()
 
     cleanup_tags(associated_tags, cur_task)

@@ -10,7 +10,7 @@ class TaskForm(forms.ModelForm):
     
     class Meta:
         model = Task
-        fields = '__all__'
+        exclude = ['owner']
         widgets = {
             'due_date': forms.DateInput(attrs={'type': 'date'}),
         }

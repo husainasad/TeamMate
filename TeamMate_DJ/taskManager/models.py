@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.auth.models import  User, Group
 from django.core.exceptions import ValidationError
 import datetime
 
@@ -10,6 +11,7 @@ class Task(models.Model):
         ("Low", "Low"),
     )
 
+    owner = models.ForeignKey(User, on_delete=models.CASCADE)
     title = models.CharField(max_length=255)
     description = models.TextField()
     due_date = models.DateField(default=datetime.date.today)

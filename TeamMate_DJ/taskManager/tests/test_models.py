@@ -1,6 +1,7 @@
-from django.test import TestCase
+from django.test import TestCase, Client
 from django.core.exceptions import ValidationError
 from taskManager.models import Task, Tag
+from django.contrib.auth import get_user_model
 import datetime
 
 class TagTestCase(TestCase):
@@ -15,11 +16,24 @@ class TagTestCase(TestCase):
 
 class TaskTestCase(TestCase):
     def setUp(self):
+        self.client = Client()
+        self.user = get_user_model().objects.create_user(
+            username='testuser', 
+            password='testpassword',
+            email='test@example.com'
+        )
+
+        self.other_user = get_user_model().objects.create_user(
+            username='otheruser', 
+            password='otherpassword',
+            email='other@example.com'
+        )
         self.tag1 = Tag.objects.create(name="sampleTag1")
         self.tag2 = Tag.objects.create(name="sampleTag2")
 
     def test_create_task_with_valid_data(self):
         task = Task.objects.create(
+            owner = self.user,
             title="sampleTitle", 
             description="sampleDescription",
             due_date=datetime.date.today() + datetime.timedelta(days=2),
@@ -30,6 +44,7 @@ class TaskTestCase(TestCase):
         task.tags.add(self.tag1)
         task.tags.add(self.tag2)
 
+        self.assertEqual(task.owner, self.user)
         self.assertEqual(task.title, "sampleTitle")
         self.assertEqual(task.description, "sampleDescription")
         self.assertEqual(task.due_date, datetime.date.today() + datetime.timedelta(days=2))
@@ -41,6 +56,7 @@ class TaskTestCase(TestCase):
     def test_default_values(self):
         
         task = Task.objects.create(
+            owner = self.user,
             title="sampleTitle", 
             description="sampleDescription",
         )
@@ -48,9 +64,11 @@ class TaskTestCase(TestCase):
         self.assertEqual(task.due_date, datetime.date.today())
         self.assertEqual(task.priority, "High")
         self.assertEqual(task.progress, 0)
+        self.assertEqual(task.tags.count(), 0)
 
     def test_due_date_cannot_be_in_past(self):
         task = Task(
+            owner = self.user,
             title="sampleTitle",
             description="sampleDescription",
             due_date=datetime.date.today() - datetime.timedelta(days=1),
@@ -61,6 +79,7 @@ class TaskTestCase(TestCase):
 
     def test_progress_must_be_within_valid_range(self):
         task = Task(
+            owner = self.user,
             title="sampleTitle",
             description="sampleDescription",
             due_date=datetime.date.today() + datetime.timedelta(days=1),
@@ -75,6 +94,7 @@ class TaskTestCase(TestCase):
 
     def test_ordering(self):
         task1 = Task.objects.create(
+            owner = self.user,
             title="sampleTitle1", 
             description="sampleDescription1",
             due_date=datetime.date.today() + datetime.timedelta(days=1),
@@ -83,6 +103,7 @@ class TaskTestCase(TestCase):
         )
 
         task2 = Task.objects.create(
+            owner = self.user,
             title="sampleTitle2", 
             description="sampleDescription2",
             due_date=datetime.date.today() + datetime.timedelta(days=2),
@@ -91,6 +112,7 @@ class TaskTestCase(TestCase):
         )
 
         task3 = Task.objects.create(
+            owner = self.user,
             title="sampleTitle3", 
             description="sampleDescription3",
             due_date=datetime.date.today() + datetime.timedelta(days=2),
@@ -99,6 +121,7 @@ class TaskTestCase(TestCase):
         )
 
         task4 = Task.objects.create(
+            owner = self.user,
             title="sampleTitle4", 
             description="sampleDescription4",
             due_date=datetime.date.today() + datetime.timedelta(days=2),
@@ -107,6 +130,7 @@ class TaskTestCase(TestCase):
         )
 
         task5 = Task.objects.create(
+            owner = self.user,
             title="sampleTitle5", 
             description="sampleDescription5",
             due_date=datetime.date.today() + datetime.timedelta(days=2),

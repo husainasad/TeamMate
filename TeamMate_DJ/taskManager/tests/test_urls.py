@@ -1,5 +1,6 @@
 from django.test import TestCase, Client
 from django.urls import reverse, resolve
+from django.contrib.auth import get_user_model
 from taskManager.models import Task, Tag
 from taskManager.views import (
     display_hello, testing, display_tasks, add_task, 
@@ -10,7 +11,12 @@ class URLTests(TestCase):
 
     def setUp(self):
         self.client = Client()
+        self.user = get_user_model().objects.create_user(
+            username='testuser', 
+            password='testpassword'
+        )
         self.task = Task.objects.create(
+            owner=self.user,
             title="Sample Task", 
             description="Sample Description",
         )
