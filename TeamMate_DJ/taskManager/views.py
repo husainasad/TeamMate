@@ -1,8 +1,8 @@
 from django.shortcuts import get_object_or_404, redirect, render
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
-from .forms import TaskForm
-from .models import Task, Tag
+from taskManager.forms import TaskForm
+from taskManager.models import Task, Tag
 
 def process_tags(input_tags):
     tag_names = [tag.strip() for tag in input_tags.split(',') if tag.strip()]

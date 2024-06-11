@@ -1,10 +1,16 @@
 from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.contrib.auth import login
-from .forms import CustomUserCreationForm
+from userManager.forms import CustomUserCreationForm
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
 
+# def dashboard(request):
+#     return render(request, "users/dashboard.html")
+
+@api_view(['GET'])
 def dashboard(request):
-    return render(request, "users/dashboard.html")
+    return Response({'message': 'Welcome to the Dashboard!'})
 
 def register(request):
     if request.method=='POST':
