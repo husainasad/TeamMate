@@ -57,7 +57,7 @@ def user_logout(request):
         }, status=status.HTTP_200_OK)
     except Exception as e:
         return Response({
-            'error': str(e)
+            'error': 'Invalid credentials'
         }, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET'])
