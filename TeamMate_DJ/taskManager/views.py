@@ -1,11 +1,14 @@
-from django.shortcuts import get_object_or_404, redirect, render
-from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse
-from taskManager.forms import TaskForm
+from django.shortcuts import get_object_or_404
 from taskManager.models import Task, Tag
+from taskManager.serializers import TaskSerializer, TagSerializer
+from rest_framework.decorators import api_view, authentication_classes, permission_classes
+from rest_framework.response import Response
+from rest_framework import status
+from rest_framework.authentication import TokenAuthentication
+from rest_framework.permissions import IsAuthenticated
 
 def process_tags(input_tags):
-    tag_names = [tag.strip() for tag in input_tags.split(',') if tag.strip()]
+    tag_names = [tag.strip() for tag in input_tags if tag.strip()]
     tags = []
     for tag_name in tag_names:
         tag, created = Tag.objects.get_or_create(name=tag_name)
@@ -19,89 +22,95 @@ def cleanup_tags(tags, task):
         else:
             task.tags.remove(tag)
 
-def display_hello(request):
-    return HttpResponse('Hello World!')
-
-def testing(request):
-    return render(request, 'testing_tmpl.html')  
-
-@login_required
+@api_view(['GET'])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
 def display_tasks(request):
+    try:
+        tasks = Task.objects.filter(owner=request.user)
+        status_filter = request.GET.get('status')
 
-    tasks = Task.objects.filter(owner=request.user)
-    status_filter = request.GET.get('status')
+        if(status_filter=='completed'):
+            tasks = tasks.filter(progress=100)
+        elif(status_filter=='pending'):
+            tasks = tasks.filter(progress__lt=100)
 
-    if(status_filter=='completed'):
-        tasks = tasks.filter(progress=100)
-    elif(status_filter=='pending'):
-        tasks = tasks.filter(progress__lt=100)
+        serializer = TaskSerializer(tasks, many=True)
 
-    return render(request, 'taskPage.html', {'data': tasks})
+        response_data = {
+            'username': request.user.username,
+            'tasks': serializer.data
+        }
 
-@login_required
+        return Response(response_data, status=status.HTTP_200_OK)
+    except Exception as e:
+        print(f"Error displaying task: {e}")
+        return Response({'detail': 'Error displaying task'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['POST'])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
 def add_task(request):
-    if request.method == 'POST':
-        form = TaskForm(request.POST)
-        
-        if form.is_valid():
-            task = form.save(commit=False)
-            task.owner = request.user
-
-            tags = process_tags(form.cleaned_data.get('tags', ''))
-
-            task.save()
+    serializer = TaskSerializer(data=request.data)
+    if serializer.is_valid():
+        try:
+            task = serializer.save(owner=request.user)
+            tags = process_tags(request.data.get('tags', ''))
             task.tags.set(tags)
-
-            return redirect('task_details', id=task.id)
+            return Response(TaskSerializer(task).data, status=status.HTTP_201_CREATED)
+        except Exception as e:
+            print(f"Error during task creation: {e}")
+            return Response({'detail': 'Error during task creation'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     else:
-        form = TaskForm()
-    
-    return render(request, 'add_task.html', {'form':form})
+        print(serializer.errors)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-@login_required
+@api_view(['GET'])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
 def task_details(request, id):
-    task = get_object_or_404(Task, id=id)
-    return render(request, 'task_details.html', {'data': task})
+    try:
+        task = get_object_or_404(Task, id=id, owner=request.user)
+        serializer = TaskSerializer(task)
 
-@login_required
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    except Exception as e:
+        print(f"Error fetching task details: {e}")
+        return Response({'detail': 'Error fetching task details'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['PUT'])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
 def update_task(request, id):
-    cur_task = get_object_or_404(Task, id=id)
+    task = get_object_or_404(Task, id=id, owner=request.user)
+    serializer = TaskSerializer(task, data=request.data, partial=True)
 
-    if cur_task.owner != request.user:
-        return HttpResponse('Unauthorized', status=401)
-
-    if request.method == 'POST':
-        form = TaskForm(request.POST, instance=cur_task)
-
-        if form.is_valid():
-            updated_task = form.save(commit=False)
-
-            updated_tags = process_tags(form.cleaned_data.get('tags', ''))
-            prev_tags = cur_task.tags.all()
-
+    if serializer.is_valid():
+        try:
+            updated_task = serializer.save()
+            updated_tags = process_tags(request.data.get('tags', ''))
+            prev_tags = task.tags.all()
             prev_only_tags = [tag for tag in prev_tags if tag not in updated_tags]
-
-            cleanup_tags(prev_only_tags, cur_task)
-        
-            updated_task.save()
+            cleanup_tags(prev_only_tags, task)
             updated_task.tags.set(updated_tags)
-
-            return redirect('task_details', id=id)
+            return Response(TaskSerializer(updated_task).data, status=status.HTTP_200_OK)
+        except Exception as e:
+            print(f"Error updating task: {e}")
+            return Response({'detail': 'Error updating task'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     else:
-        form = TaskForm(instance=cur_task)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    return render(request, 'update_task.html', {'form':form})
-
-@login_required
+@api_view(['DELETE'])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
 def delete_task(request, id):
-    cur_task = get_object_or_404(Task, id=id)
+    try:
+        task = get_object_or_404(Task, id=id, owner=request.user)
+        associated_tags = task.tags.all()
+        cleanup_tags(associated_tags, task)
+        task.delete()
 
-    if cur_task.owner != request.user:
-        return HttpResponse('Unauthorized', status=401)
-    
-    associated_tags = cur_task.tags.all()
-
-    cleanup_tags(associated_tags, cur_task)
-
-    cur_task.delete()
-    return redirect('display_tasks')
+        return Response(status=status.HTTP_204_NO_CONTENT)
+    except Exception as e:
+        print(f"Error deleting task: {e}")
+        return Response({'detail': 'Error deleting task'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

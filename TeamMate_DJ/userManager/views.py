@@ -12,13 +12,17 @@ from rest_framework.permissions import IsAuthenticated
 def user_signup(request):
     form = CustomUserCreationForm(data=request.data)
     if form.is_valid():
-        user = form.save()
-        token, created = Token.objects.get_or_create(user=user)
-        return Response({
-            'message': 'Registration successful',
-            'username': user.username,
-            'token': token.key
-        }, status=status.HTTP_201_CREATED)
+        try:
+            user = form.save()
+            token, created = Token.objects.get_or_create(user=user)
+            return Response({
+                'message': 'Registration successful',
+                'username': user.username,
+                'token': token.key
+            }, status=status.HTTP_201_CREATED)
+        except Exception as e:
+            print(f"Error signing up: {e}")
+            return Response({'detail': 'Error signing up'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     else:
         return Response(form.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -34,12 +38,16 @@ def user_login(request):
     
     user = authenticate(username=username, password=password)
     if user is not None:
-        login(request, user)
-        token, created = Token.objects.get_or_create(user=user)
-        return Response({
-            'token': token.key,
-            'username': user.username,
-        }, status=status.HTTP_200_OK)
+        try:
+            login(request, user)
+            token, created = Token.objects.get_or_create(user=user)
+            return Response({
+                'token': token.key,
+                'username': user.username,
+            }, status=status.HTTP_200_OK)
+        except Exception as e:
+            print(f"Error logging in: {e}")
+            return Response({'detail': 'Error loggin in'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     else:
         return Response({
             'error': 'Invalid credentials'
@@ -59,11 +67,3 @@ def user_logout(request):
         return Response({
             'error': 'Invalid credentials'
         }, status=status.HTTP_400_BAD_REQUEST)
-
-@api_view(['GET'])
-@authentication_classes([TokenAuthentication])
-@permission_classes([IsAuthenticated])
-def dashboard(request):
-    return Response({
-        'username': request.user.username
-    }, status=status.HTTP_200_OK)

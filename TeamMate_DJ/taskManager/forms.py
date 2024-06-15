@@ -1,5 +1,5 @@
 from django import forms
-from .models import Task
+from taskManager.models import Task
 
 class TaskForm(forms.ModelForm):
     tags = forms.CharField(

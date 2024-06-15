@@ -80,6 +80,10 @@ function Signup() {
         {error && <p style={{ color: 'red' }}>{error}</p>}
         <button type="submit">Sign Up</button>
       </form>
+      <div>
+        <p>Already a member?</p>
+        <p><a href='/'>Log in here</a></p>
+      </div>
     </div>
   );
 }
