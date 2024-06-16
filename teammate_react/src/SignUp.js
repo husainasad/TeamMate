@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { signup } from './services/authService';
 
 function Signup() {
   const [username, setUsername] = useState('');
@@ -20,7 +20,7 @@ function Signup() {
     }
 
     try{
-        const response = await axios.post('http://localhost:8000/signup/', {
+        const response = await signup({
             username,
             email,
             password1,

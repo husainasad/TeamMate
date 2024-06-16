@@ -5,6 +5,7 @@ import Signup from './SignUp';
 import Dashboard from './Dashboard';
 import AddTask from './AddTask';
 import TaskDetails from './TaskDetails';
+import EditTask from './EditTask';
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
         <Route path="/dashboard" element={<Dashboard />}/>
         <Route path="/addTask" element={<AddTask />}/>
         <Route path="/taskDetails/:id" element={<TaskDetails />}/>
+        <Route path="/taskDetails/:id/update" element={<EditTask />}/>
       </Routes>
     </Router>
   );

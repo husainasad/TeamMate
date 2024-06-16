@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import { useNavigate, useParams } from 'react-router-dom';
+import { getTaskDetails } from './services/taskService';
 
 function TaskDetails() {
     const { id } = useParams();
@@ -15,11 +15,7 @@ function TaskDetails() {
     const fetchTaskDetails = async () => {
         try{
             const token = localStorage.getItem('token');
-            const response = await axios.get(`http://localhost:8000/tasks/${id}/`, {
-                headers: {
-                  Authorization: `Token ${token}`,
-                },
-              });
+            const response = await getTaskDetails(token, id);
 
             if (response.status === 200) {
                 setTask(response.data);
@@ -66,6 +62,7 @@ function TaskDetails() {
                 </table>
             </div>
           )}
+          <button onClick={() => navigate(`/taskDetails/${id}/update`)}>Update Task</button>
           <button onClick={() => navigate('/dashboard')}>Go Back</button>
         </div>
       );

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { logout } from './services/authService';
+import { deleteTask, getTasks } from './services/taskService';
 
 function Dashboard() {
   const [username, setUsername] = useState('');
@@ -16,13 +17,7 @@ function Dashboard() {
   const fetchData = async () => {
     try {
       const token = localStorage.getItem('token');
-
-      const response = await axios.get('http://localhost:8000/tasks/', {
-        headers: {
-          Authorization: `Token ${token}`,
-        },
-        params: { status: filterStatus },
-      });
+      const response = await getTasks(token, filterStatus)
 
       if (response.status === 200) {
         setUsername(response.data.username);
@@ -38,30 +33,10 @@ function Dashboard() {
     setFilterStatus(event.target.value);
   };
 
-  // const handleTaskDetails = async(event) => {
-  //   try{
-
-  //   } catch(error){
-  //     setError('Error fetching task details');
-  //   }
-  // }
-
-  // const handleAddTask = async(event) => {
-  //   try{
-
-  //   } catch(error){
-  //     setError('Error Adding task');
-  //   }
-  // }
-
   const handleDeleteTask = async(taskId) => {
     try{
       const token = localStorage.getItem('token');
-      const response = await axios.delete(`http://localhost:8000/tasks/${taskId}/delete/`, {
-        headers: {
-          Authorization: `Token ${token}`,
-        },
-      });
+      const response = await deleteTask(token, taskId);
 
       if (response.status === 204) {
         setTasks(tasks.filter(task => task.id !== taskId));
@@ -77,11 +52,7 @@ function Dashboard() {
     event.preventDefault();
     try{
         const token = localStorage.getItem('token');
-        const response = await axios.post('http://localhost:8000/logout/', null, {
-          headers: {
-            Authorization: `Token ${token}`,
-          },
-        });
+        const response = await logout(token);
 
         if(response.status === 200){
           localStorage.removeItem('token');
