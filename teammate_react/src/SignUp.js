@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { signup } from './services/authService';
+import {Icon} from 'react-icons-kit';
+import {eyeOff} from 'react-icons-kit/feather/eyeOff';
+import {eye} from 'react-icons-kit/feather/eye'
 
 function Signup() {
   const [username, setUsername] = useState('');
@@ -9,6 +12,18 @@ function Signup() {
   const [password2, setPassword2] = useState('');
   const [error, setError] = useState('');
   const navigate = useNavigate();
+  const [type, setType] = useState('password');
+  const [icon, setIcon] = useState(eyeOff);
+
+  const handleToggle = () => {
+    if (type==='password'){
+       setIcon(eye);
+       setType('text')
+    } else {
+       setIcon(eyeOff)
+       setType('password')
+    }
+ }
 
   const handleSignup = async(event) => {
     event.preventDefault();
@@ -64,15 +79,18 @@ function Signup() {
         <div>
           <label>Password: </label>
           <input
-            type="password"
+            type={type}
             value={password1}
             onChange={(e) => setPassword1(e.target.value)}
           />
+          <span onClick={handleToggle}>
+            <Icon icon={icon} size={25}/>
+          </span>
         </div>
         <div>
           <label>Confirm Password: </label>
           <input
-            type="password"
+            type={type}
             value={password2}
             onChange={(e) => setPassword2(e.target.value)}
           />
@@ -82,7 +100,7 @@ function Signup() {
       </form>
       <div>
         <p>Already a member?</p>
-        <p><a href='/'>Log in here</a></p>
+        <button onClick={() => navigate('/')}>Log In here</button>
       </div>
     </div>
   );

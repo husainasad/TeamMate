@@ -1,12 +1,27 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { login } from './services/authService';
+import {Icon} from 'react-icons-kit';
+import {eyeOff} from 'react-icons-kit/feather/eyeOff';
+import {eye} from 'react-icons-kit/feather/eye'
 
 function Login() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [type, setType] = useState('password');
+  const [icon, setIcon] = useState(eyeOff);
   const navigate = useNavigate();
+
+  const handleToggle = () => {
+    if (type==='password'){
+       setIcon(eye);
+       setType('text')
+    } else {
+       setIcon(eyeOff)
+       setType('password')
+    }
+ }
 
   const handleLogin = async(event) => {
     event.preventDefault();
@@ -47,17 +62,20 @@ function Login() {
         <div>
           <label>Password:</label>
           <input
-            type="password"
+            type={type}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
+          <span onClick={handleToggle}>
+            <Icon icon={icon} size={25}/>
+          </span>
         </div>
         {error && <p style={{ color: 'red' }}>{error}</p>}
         <button type="submit">Login</button>
       </form>
       <div>
         <p>Not a member?</p>
-        <p><a href='/signup'>Sign up here</a></p>
+        <button onClick={() => navigate('/signup')}>Sign up here</button>
       </div>
     </div>
   );
