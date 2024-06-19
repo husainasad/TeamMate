@@ -6,7 +6,9 @@ from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
+import logging
 
+logger = logging.getLogger(__name__)
 
 @api_view(['POST'])
 def user_signup(request):
@@ -21,7 +23,7 @@ def user_signup(request):
                 'token': token.key
             }, status=status.HTTP_201_CREATED)
         except Exception as e:
-            print(f"Error signing up: {e}")
+            logger.error(f"Error signing up: {e}")
             return Response({'detail': 'Error signing up'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     else:
         return Response(form.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -33,7 +35,7 @@ def user_login(request):
     
     if not username or not password:
         return Response({
-            'error': 'Username and password are required'
+            'detail': 'Username and password are required'
         }, status=status.HTTP_400_BAD_REQUEST)
     
     user = authenticate(username=username, password=password)
@@ -46,11 +48,11 @@ def user_login(request):
                 'username': user.username,
             }, status=status.HTTP_200_OK)
         except Exception as e:
-            print(f"Error logging in: {e}")
+            logger.error(f"Error logging in: {e}")
             return Response({'detail': 'Error loggin in'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     else:
         return Response({
-            'error': 'Invalid credentials'
+            'detail': 'Invalid credentials'
         }, status=status.HTTP_400_BAD_REQUEST)
   
 @api_view(['POST'])
@@ -64,6 +66,7 @@ def user_logout(request):
             'message': 'Logout successful'
         }, status=status.HTTP_200_OK)
     except Exception as e:
+        logger.error(f"Error logging out: {e}")
         return Response({
-            'error': 'Invalid credentials'
+            'detail': 'Invalid credentials'
         }, status=status.HTTP_400_BAD_REQUEST)
