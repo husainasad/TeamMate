@@ -1,14 +1,19 @@
 from django.shortcuts import get_object_or_404
+from django.http import Http404
 from taskManager.models import Task, Tag
-from taskManager.serializers import TaskSerializer, TagSerializer
+from taskManager.serializers import TaskSerializer
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
+import logging
+
+logger = logging.getLogger(__name__)
 
 def process_tags(input_tags):
-    tag_names = [tag.strip() for tag in input_tags if tag.strip()]
+    # tag_names = [tag.strip() for tag in input_tags if tag.strip()]
+    tag_names = [tag.strip() for tag in input_tags.split(',') if tag.strip()]
     tags = []
     for tag_name in tag_names:
         tag, created = Tag.objects.get_or_create(name=tag_name)
@@ -44,7 +49,7 @@ def display_tasks(request):
 
         return Response(response_data, status=status.HTTP_200_OK)
     except Exception as e:
-        print(f"Error displaying task: {e}")
+        logger.error(f"Error displaying tasks: {e}")
         return Response({'detail': 'Error displaying task'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['POST'])
@@ -59,10 +64,9 @@ def add_task(request):
             task.tags.set(tags)
             return Response(TaskSerializer(task).data, status=status.HTTP_201_CREATED)
         except Exception as e:
-            print(f"Error during task creation: {e}")
-            return Response({'detail': 'Error during task creation'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            logger.error(f"Error creating task: {e}")
+            return Response({'detail': 'Error creating task'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     else:
-        print(serializer.errors)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET'])
@@ -72,10 +76,9 @@ def task_details(request, id):
     try:
         task = get_object_or_404(Task, id=id, owner=request.user)
         serializer = TaskSerializer(task)
-
         return Response(serializer.data, status=status.HTTP_200_OK)
     except Exception as e:
-        print(f"Error fetching task details: {e}")
+        logger.error(f"Error fetching task details: {e}")
         return Response({'detail': 'Error fetching task details'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['PUT'])
@@ -95,7 +98,7 @@ def update_task(request, id):
             updated_task.tags.set(updated_tags)
             return Response(TaskSerializer(updated_task).data, status=status.HTTP_200_OK)
         except Exception as e:
-            print(f"Error updating task: {e}")
+            logger.error(f"Error updating tasks: {e}")
             return Response({'detail': 'Error updating task'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     else:
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -109,8 +112,9 @@ def delete_task(request, id):
         associated_tags = task.tags.all()
         cleanup_tags(associated_tags, task)
         task.delete()
-
         return Response(status=status.HTTP_204_NO_CONTENT)
+    except Http404:
+        return Response({'detail': 'Not found.'}, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
-        print(f"Error deleting task: {e}")
+        logger.error(f"Error deleting tasks: {e}")
         return Response({'detail': 'Error deleting task'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
