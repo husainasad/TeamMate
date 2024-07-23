@@ -2,9 +2,13 @@ from django.urls import path
 from taskManager import views
 
 urlpatterns = [
-    path('tasks/', views.display_tasks, name='display_tasks'),
-    path('tasks/add/', views.add_task, name='add_task'),
-    path('tasks/<int:id>/', views.task_details, name='task_details'),
-    path('tasks/<int:id>/update/', views.update_task, name='update_task'),
-    path('tasks/<int:id>/delete/', views.delete_task, name='delete_task'),
+    path('tasks/', views.get_all_tasks, name='get_all_tasks'),
+    path('tasks/member', views.get_tasks_as_member, name='get_tasks_as_member'),
+    path('tasks/owner', views.get_tasks_as_owner, name='get_tasks_as_owner'),
+    path('tasks/add/', views.add_new_task, name='add_new_task'),
+    path('tasks/<int:id>/', views.get_task_by_id, name='get_task_by_id'),
+    path('tasks/<int:id>/update/', views.update_task_by_id, name='update_task_by_id'),
+    path('tasks/<int:id>/delete/', views.delete_task_by_id, name='delete_task_by_id'),
+    path('tasks/<int:id>/addMember/', views.add_user_to_task, name='add_user_to_task'),
+    path('tasks/<int:id>/removeMember/', views.remove_user_from_task, name='remove_user_from_task'),
 ]
