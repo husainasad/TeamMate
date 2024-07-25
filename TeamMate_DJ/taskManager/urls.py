@@ -3,8 +3,8 @@ from taskManager import views
 
 urlpatterns = [
     path('tasks/', views.get_all_tasks, name='get_all_tasks'),
-    path('tasks/member', views.get_tasks_as_member, name='get_tasks_as_member'),
-    path('tasks/owner', views.get_tasks_as_owner, name='get_tasks_as_owner'),
+    path('tasks/member/', views.get_tasks_as_member, name='get_tasks_as_member'),
+    path('tasks/owner/', views.get_tasks_as_owner, name='get_tasks_as_owner'),
     path('tasks/add/', views.add_new_task, name='add_new_task'),
     path('tasks/<int:id>/', views.get_task_by_id, name='get_task_by_id'),
     path('tasks/<int:id>/update/', views.update_task_by_id, name='update_task_by_id'),

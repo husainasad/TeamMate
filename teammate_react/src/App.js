@@ -1,23 +1,26 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import Login from './Login';
-import Signup from './SignUp';
-import Dashboard from './Dashboard';
-import AddTask from './AddTask';
-import TaskDetails from './TaskDetails';
-import EditTask from './EditTask';
+import Login from './components/Auth/Login';
+import Register from './components/Auth/Register';
+import AuthProvider from './components/Auth/AuthContext';
+import Header from './components/Tasks/Header';
+import TaskList from './components/Tasks/TaskList';
+import AddTask from './components/Tasks/AddTask';
+import EditTask from './components/Tasks/EditTask';
 
 function App() {
   return (
     <Router>
-      <Routes>
-        <Route path="/" element={<Login />}/>
-        <Route path="/signup" element={<Signup />}/>
-        <Route path="/dashboard" element={<Dashboard />}/>
-        <Route path="/addTask" element={<AddTask />}/>
-        <Route path="/taskDetails/:id" element={<TaskDetails />}/>
-        <Route path="/taskDetails/:id/update" element={<EditTask />}/>
-      </Routes>
+      <AuthProvider>
+        <Header />
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/" element={<TaskList />} />
+          <Route path="/add-task" element={<AddTask />} />
+          <Route path="/edit-task" element={<EditTask />} />
+        </Routes>
+      </AuthProvider>
     </Router>
   );
 }

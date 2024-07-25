@@ -61,7 +61,7 @@ def get_task_by_id(request, task_id):
         serializer = TaskSerializer(task)
         return Response(serializer.data, status=status.HTTP_200_OK)
     except Exception as e:
-        return Response({'detail': f'Error fetching recipe by id: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return Response({'detail': f'Error fetching task by id: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['POST'])
 def add_new_task(request):
