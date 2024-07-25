@@ -57,9 +57,12 @@ def get_tasks_as_owner(request):
 @api_view(['GET'])
 def get_task_by_id(request, task_id):
     task = get_object_or_404(Task, id=task_id)
+    task_member = TaskMember.objects.filter(task=task, user=request.user).first()
     try:
         serializer = TaskSerializer(task)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        task_data = serializer.data
+        task_data['is_owner'] = task_member.is_owner if task_member else False
+        return Response(task_data, status=status.HTTP_200_OK)
     except Exception as e:
         return Response({'detail': f'Error fetching task by id: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -77,16 +80,6 @@ def add_new_task(request):
         except Exception as e:
             return Response({'detail': f'Error creating task: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-# @api_view(['GET'])
-# def task_details(request, id):
-#     try:
-#         task = get_object_or_404(Task, id=id, owner=request.user)
-#         serializer = TaskSerializer(task)
-#         return Response(serializer.data, status=status.HTTP_200_OK)
-#     except Exception as e:
-#         logger.error(f"Error fetching task details: {e}")
-#         return Response({'detail': 'Error fetching task details: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['PUT'])
 def update_task_by_id(request, task_id):

@@ -7,6 +7,7 @@ import Header from './components/Tasks/Header';
 import TaskList from './components/Tasks/TaskList';
 import AddTask from './components/Tasks/AddTask';
 import EditTask from './components/Tasks/EditTask';
+import TaskDetails from './components/Tasks/TaskDetails';
 
 function App() {
   return (
@@ -18,7 +19,8 @@ function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/" element={<TaskList />} />
           <Route path="/add-task" element={<AddTask />} />
-          <Route path="/edit-task" element={<EditTask />} />
+          <Route path="/tasks/:id" element={<TaskDetails />} />
+          <Route path="/tasks/:id/edit-task" element={<EditTask />} />
         </Routes>
       </AuthProvider>
     </Router>

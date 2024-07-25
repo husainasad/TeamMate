@@ -1,10 +1,10 @@
 import React, { useEffect, useState, useContext } from 'react';
 import { getMemberTasks } from '../../services/Api';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { AuthContext } from '../Auth/AuthContext';
 
 const TaskList = () => {
-    const [tasks, settasks] = useState([]);
+    const [tasks, setTasks] = useState([]);
     const { isAuthenticated } = useContext(AuthContext);
     const navigate = useNavigate()
 
@@ -16,7 +16,7 @@ const TaskList = () => {
             }
             try {
                 const response = await getMemberTasks();
-                settasks(response.data);
+                setTasks(response.data);
             } catch (error) {
                 console.error('Failed to fetch tasks:', error);
             }
@@ -41,7 +41,11 @@ const TaskList = () => {
                 <tbody>
                     {tasks.map((task) => (
                         <tr key={task.id}>
-                            <td>{task.title}</td>
+                            <td>
+                                <Link to={`/tasks/${task.id}`} >
+                                    {task.title}
+                                </Link>
+                            </td>
                             <td>{task.priority}</td>
                             <td>{task.due_date}</td>
                             <td>{task.tags.map(tag => tag.name).join(', ')}</td>

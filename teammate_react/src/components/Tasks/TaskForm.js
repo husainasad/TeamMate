@@ -32,7 +32,7 @@ const TaskForm = ({ initialData, onSubmit, onCancel }) => {
     };
 
     useEffect(() => {
-        setTitle(initialData.name || '');
+        setTitle(initialData.title || '');
         setDescription(initialData.description || '');
         setDueDate(initialData.due_date || new Date().toISOString().split('T')[0]);
         setTags(initialData.tags ? initialData.tags.map(tag => tag.name).join(', ') : '');
