@@ -18,7 +18,7 @@ class TaskMemberSerializer(serializers.ModelSerializer):
 class TaskSerializer(serializers.ModelSerializer):
     owner = serializers.ReadOnlyField(source='owner.username')  
     tags = TagSerializer(many=True, read_only=True)
-    members = TaskMemberSerializer(many=True, read_only=True, source='taskmember_set')
+    members = TaskMemberSerializer(many=True, read_only=True)
 
     class Meta:
         model = Task

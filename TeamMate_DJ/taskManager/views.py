@@ -31,7 +31,7 @@ def get_all_tasks(request):
         serializer = TaskSerializer(tasks, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
     except Exception as e:
-         return Response({'detail': f'Error fetching tasks: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return Response({'detail': f'Error fetching tasks: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['GET'])
 def get_tasks_as_member(request):
@@ -42,7 +42,7 @@ def get_tasks_as_member(request):
         serializer = TaskSerializer(tasks, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
     except Exception as e:
-         return Response({'detail': f'Error fetching member tasks: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return Response({'detail': f'Error fetching member tasks: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
 @api_view(['GET'])
 def get_tasks_as_owner(request):
@@ -52,7 +52,7 @@ def get_tasks_as_owner(request):
         serializer = TaskSerializer(tasks, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
     except Exception as e:
-         return Response({'detail': f'Error fetching owner tasks: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return Response({'detail': f'Error fetching owner tasks: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['GET'])
 def get_task_by_id(request, task_id):
@@ -60,9 +60,10 @@ def get_task_by_id(request, task_id):
     task_member = TaskMember.objects.filter(task=task, user=request.user).first()
     try:
         serializer = TaskSerializer(task)
-        task_data = serializer.data
-        task_data['is_owner'] = task_member.is_owner if task_member else False
-        return Response(task_data, status=status.HTTP_200_OK)
+        # task_data = serializer.data
+        # task_data['is_owner'] = task_member.is_owner if task_member else False
+        # return Response(task_data, status=status.HTTP_200_OK)
+        return Response(serializer.data, status=status.HTTP_200_OK)
     except Exception as e:
         return Response({'detail': f'Error fetching task by id: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 

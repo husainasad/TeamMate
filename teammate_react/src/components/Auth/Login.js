@@ -13,7 +13,7 @@ const Login = () => {
         e.preventDefault();
         try {
             const response = await loginUser({ username, password });
-            login(response.data.access, response.data.refresh);
+            login(response.data.access, response.data.refresh, username);
             navigate('/');
         } catch (error) {
             console.error('Login failed:', error);

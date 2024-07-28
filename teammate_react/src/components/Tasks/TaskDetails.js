@@ -2,23 +2,23 @@ import React, { useEffect, useState, useContext } from 'react';
 import { getTaskById, deleteTask, addMember, removeMember } from '../../services/Api';
 import { useParams, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../Auth/AuthContext';
+import MemberList from './MemberList';
 
 const TaskDetails = () => {
     const { id } = useParams();
     const navigate = useNavigate();
-    const [task, setTask] = useState({ tags: [], is_owner: false, members: [] });
+    const [task, setTask] = useState({ tags: [], members: [] });
     const [newUsername, setNewUsername] = useState('');
-    const [usernameToRemove, setUsernameToRemove] = useState('');
-    const [error, setError] = useState(null);
-    const [success, setSuccess] = useState(null);
-    const { isAuthenticated } = useContext(AuthContext);
+    const [message, setMessage] = useState({ error: null, success: null });
+    const { isAuthenticated, user } = useContext(AuthContext);
 
     useEffect(() => {
+        if (!isAuthenticated) {
+            navigate('/login');
+            return;
+        }
+
         const fetchTask = async () => {
-            if (!isAuthenticated) {
-                navigate('/login');
-                return;
-            }
             try {
                 const response = await getTaskById(id);
                 setTask(response.data);
@@ -42,12 +42,9 @@ const TaskDetails = () => {
 
     const handleAddMember = async () => {
         if (!newUsername.trim()) {
-            setError('Username cannot be empty.');
+            setMessage({ error: 'Username cannot be empty.', success: null });
             return;
         }
-
-        setError(null);
-        setSuccess(null);
 
         try {
             const response = await addMember(id, { username: newUsername });
@@ -56,34 +53,30 @@ const TaskDetails = () => {
                 ...prevTask,
                 members: Array.isArray(prevTask.members) ? [...prevTask.members, newMember] : [newMember]
             }));
-            setSuccess('User added successfully');
+            setMessage({ error: null, success: 'User added successfully' });
             setNewUsername('');
         } catch (error) {
-            setError('Error adding user');
+            setMessage({ error: 'Error adding user', success: null });
         }
     };
 
-    const handleRemoveMember = async () => {
-        if (!usernameToRemove.trim()) {
-            setError('Username cannot be empty.');
-            return;
-        }
-
-        setError(null);
-        setSuccess(null);
-
+    const handleRemoveMember = async (username) => {
         try {
-            await removeMember(id, { username: usernameToRemove });
-            setTask(prevTask => ({
-                ...prevTask,
-                members: Array.isArray(prevTask.members) ? prevTask.members.filter(member => member.username !== usernameToRemove) : []
-            }));
-            setSuccess('User removed successfully');
-            setUsernameToRemove('');
+            await removeMember(id, { username });
+            setTask(prevTask => {
+                const updatedMembers = prevTask.members.filter(member => member.user !== username);
+                return {
+                    ...prevTask,
+                    members: updatedMembers
+                };
+            });
+            setMessage({ error: null, success: 'User removed successfully' });
         } catch (error) {
-            setError('Error removing user');
+            setMessage({ error: 'Error removing user', success: null });
         }
     };
+
+    const isOwner = task.owner === user?.username;
 
     return (
         <div>
@@ -110,7 +103,13 @@ const TaskDetails = () => {
                     </tr>
                 </tbody>
             </table>
-            {task.is_owner && (
+            <MemberList
+                members={task.members || []}
+                isOwner={isOwner}
+                ownerUsername={task.owner}
+                onRemoveMember={handleRemoveMember}
+            />
+            {isOwner && (
                 <>
                     <input
                         type="text"
@@ -119,20 +118,13 @@ const TaskDetails = () => {
                         placeholder="Enter username"
                     />
                     <button onClick={handleAddMember}>Add User</button>
-                    <input
-                        type="text"
-                        value={usernameToRemove}
-                        onChange={(e) => setUsernameToRemove(e.target.value)}
-                        placeholder="Enter username to remove"
-                    />
-                    <button onClick={handleRemoveMember}>Remove User</button>
                 </>
             )}
-            {error && <p style={{ color: 'red' }}>{error}</p>}
-            {success && <p style={{ color: 'green' }}>{success}</p>}
-            <button type="submit" onClick={() => navigate(`/tasks/${id}/edit-task`)}>Edit</button>
-            {task.is_owner && (
-                <button type="submit" onClick={handleDelete}>Delete</button>
+            {message.error && <p style={{ color: 'red' }}>{message.error}</p>}
+            {message.success && <p style={{ color: 'green' }}>{message.success}</p>}
+            <button type="submit" onClick={() => navigate(`/tasks/${id}/edit-task`)}>Edit Task</button>
+            {isOwner && (
+                <button type="submit" onClick={handleDelete}>Delete Task</button>
             )}
         </div>
     );
