@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import Login from './components/Auth/Login';
 import Register from './components/Auth/Register';
 import AuthProvider from './components/Auth/AuthContext';
@@ -10,10 +10,13 @@ import EditTask from './components/Tasks/EditTask';
 import TaskDetails from './components/Tasks/TaskDetails';
 
 function App() {
+
+  const location = useLocation();
+  const showHeader = !['/login', '/register'].includes(location.pathname);
+
   return (
-    <Router>
-      <AuthProvider>
-        <Header />
+    <>
+      {showHeader && <Header />}
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
@@ -22,9 +25,18 @@ function App() {
           <Route path="/tasks/:id" element={<TaskDetails />} />
           <Route path="/tasks/:id/edit-task" element={<EditTask />} />
         </Routes>
+    </>
+  );
+}
+
+const AppContainer = () => {
+  return (
+    <Router>
+      <AuthProvider>
+        <App />
       </AuthProvider>
     </Router>
   );
 }
 
-export default App;
+export default AppContainer;
