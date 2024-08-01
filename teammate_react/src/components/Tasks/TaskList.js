@@ -39,7 +39,15 @@ const TaskList = () => {
 
     return (
         <div className="p-4 max-w-4xl mx-auto">
-            <h2 className="text-2xl font-bold mb-4 text-center">Tasks</h2>
+            <div className="flex justify-between items-center mb-4">
+                <h2 className="text-2xl font-bold">Tasks</h2>
+                <button
+                    onClick={() => navigate('/add-task')}
+                    className="text-sm font-semibold bg-green-500 hover:bg-green-600 p-2 rounded transition"
+                >
+                    Add Task
+                </button>
+            </div>
             {tasks.length > 0 ? (
                 <div className="overflow-x-auto">
                     <table className="min-w-full bg-white border border-gray-200 rounded-md">
