@@ -10,6 +10,7 @@ const TaskDetails = () => {
     const [task, setTask] = useState({ tags: [], members: [] });
     const [newUsername, setNewUsername] = useState('');
     const [message, setMessage] = useState({ error: null, success: null });
+    const [loading, setLoading] = useState(true);
     const { isAuthenticated, user } = useContext(AuthContext);
 
     useEffect(() => {
@@ -23,7 +24,9 @@ const TaskDetails = () => {
                 const response = await getTaskById(id);
                 setTask(response.data);
             } catch (error) {
-                console.error('Failed to fetch task:', error);
+                setMessage({ error: 'Failed to fetch task. Please try again later.', success: null });
+            } finally {
+                setLoading(false);
             }
         };
 
@@ -78,53 +81,101 @@ const TaskDetails = () => {
 
     const isOwner = task.owner === user?.username;
 
+    if (loading) {
+        return <p className="text-center text-gray-500">Loading task details...</p>;
+    }
+
+    if (!task) {
+        return <p className="text-center text-red-500">Task not found</p>;
+    }
+
     return (
-        <div>
-            <h2>Task Details</h2>
-            <table border="1">
-                <thead>
-                    <tr>
-                        <th>Title</th>
-                        <th>Priority</th>
-                        <th>Due Date</th>
-                        <th>Tags</th>
-                        <th>Progress</th>
-                        <th>Description</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr key={task.id}>
-                        <td>{task.title}</td>
-                        <td>{task.priority}</td>
-                        <td>{task.due_date}</td>
-                        <td>{task.tags.map(tag => tag.name).join(', ')}</td>
-                        <td>{task.progress}</td>
-                        <td>{task.description}</td>
-                    </tr>
-                </tbody>
-            </table>
-            <MemberList
-                members={task.members || []}
-                isOwner={isOwner}
-                ownerUsername={task.owner}
-                onRemoveMember={handleRemoveMember}
-            />
+        <div className="p-6 max-w-4xl mx-auto bg-white shadow-lg rounded-md">
+            <div className="flex justify-between items-center mb-4">
+                <h2 className="text-3xl font-bold">
+                    {loading ? 'Loading task details...' : message.error ? 'Error loading task' : `${task.title} Details`}
+                </h2>
+                <div className="space-x-2">
+                    <button
+                        type="button"
+                        onClick={() => navigate(`/tasks/${id}/edit-task`)}
+                        className="bg-yellow-500 text-white p-2 rounded-md hover:bg-yellow-600 transition"
+                    >
+                        Edit Task
+                    </button>
+                    {isOwner && (
+                        <button
+                            type="button"
+                            onClick={handleDelete}
+                            className="bg-red-500 text-white p-2 rounded-md hover:bg-red-600 transition"
+                        >
+                            Delete Task
+                        </button>
+                    )}
+                </div>
+            </div>
+            
+            {message.error && <p className="text-red-500 mb-4 text-center">{message.error}</p>}
+            {message.success && <p className="text-green-500 mb-4 text-center">{message.success}</p>}
+            
+            <div className="task-details mb-6">
+                <div className="mb-4">
+                    <h3 className="text-2xl font-semibold">Title:</h3>
+                    <p className="text-xl">{task.title}</p>
+                </div>
+                
+                <div className="mb-4">
+                    <h3 className="text-2xl font-semibold">Priority:</h3>
+                    <p className="text-xl">{task.priority}</p>
+                </div>
+                
+                <div className="mb-4">
+                    <h3 className="text-2xl font-semibold">Due Date:</h3>
+                    <p className="text-xl">{task.due_date}</p>
+                </div>
+                
+                <div className="mb-4">
+                    <h3 className="text-2xl font-semibold">Tags:</h3>
+                    <p className="text-xl">{task.tags.map(tag => tag.name).join(', ')}</p>
+                </div>
+                
+                <div className="mb-4">
+                    <h3 className="text-2xl font-semibold">Progress:</h3>
+                    <p className="text-xl">{task.progress}</p>
+                </div>
+                
+                <div className="mb-4">
+                    <h3 className="text-2xl font-semibold">Description:</h3>
+                    <p className="text-xl">{task.description}</p>
+                </div>
+            </div>
+            
+            <div className="task-members bg-gray-50 p-4 rounded-md mb-6">
+                <h3 className="text-2xl font-semibold mb-2">Members</h3>
+                <MemberList
+                    members={task.members || []}
+                    isOwner={isOwner}
+                    ownerUsername={task.owner}
+                    onRemoveMember={handleRemoveMember}
+                />
+            </div>
+            
             {isOwner && (
-                <>
+                <div className="add-member bg-gray-100 p-4 rounded-md">
                     <input
                         type="text"
                         value={newUsername}
                         onChange={(e) => setNewUsername(e.target.value)}
                         placeholder="Enter username"
+                        className="w-full p-2 border border-gray-300 rounded-md mb-2"
                     />
-                    <button onClick={handleAddMember}>Add User</button>
-                </>
-            )}
-            {message.error && <p style={{ color: 'red' }}>{message.error}</p>}
-            {message.success && <p style={{ color: 'green' }}>{message.success}</p>}
-            <button type="submit" onClick={() => navigate(`/tasks/${id}/edit-task`)}>Edit Task</button>
-            {isOwner && (
-                <button type="submit" onClick={handleDelete}>Delete Task</button>
+                    <button
+                        onClick={handleAddMember}
+                        className="bg-green-500 text-white p-2 rounded-md hover:bg-green-600 transition"
+                    >
+                        Add Member
+                    </button>
+                </div>
             )}
         </div>
     );

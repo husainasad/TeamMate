@@ -3,9 +3,9 @@ import React, { createContext, useState, useEffect } from 'react';
 export const AuthContext = createContext();
 
 const AuthProvider = ({ children }) => {
-    const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem('access_token'));
+    const [isAuthenticated, setIsAuthenticated] = useState(localStorage.getItem('access_token'));
     const [user, setUser] = useState({ username: localStorage.getItem('username') });
-    
+
     const login = (accessToken, refreshToken, username) => {
         localStorage.setItem('access_token', accessToken);
         localStorage.setItem('refresh_token', refreshToken);
@@ -30,6 +30,7 @@ const AuthProvider = ({ children }) => {
             setUser({ username: storedUsername });
         } else {
             setIsAuthenticated(false);
+            setUser(null);
         }
     }, []);
 
