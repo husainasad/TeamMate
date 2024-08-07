@@ -22,7 +22,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = config("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ['*']
 
@@ -112,18 +112,19 @@ WSGI_APPLICATION = 'TeamMate_DJ.wsgi.application'
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
 import configparser
+import os
 
 config = configparser.ConfigParser()
-config.read('../config.ini')
+config.read('config.ini')
 
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': config['database']['database_name'],
-        'USER': config['database']['username'],
-        'PASSWORD': config['database']['password'],
-        'HOST': config['database']['url'],
-        'PORT': config['database']['port'],
+        'NAME': os.getenv('DB_NAME', config.get('database', 'database_name')),
+        'USER': os.getenv('DB_USER', config.get('database', 'username')),
+        'PASSWORD': os.getenv('DB_PASSWORD', config.get('database', 'password')),
+        'HOST': os.getenv('DB_HOST', config.get('database', 'url')),
+        'PORT': os.getenv('DB_PORT', config.get('database', 'port')),
     }
 }
 
