@@ -69,10 +69,6 @@ pipeline {
                 }
             }
         }
-        stage('Test') {
-            steps {
-            }
-        }
     }
     post {
         always {
