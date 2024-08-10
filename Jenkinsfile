@@ -1,5 +1,7 @@
 pipeline {
-    agent any
+    agent {
+        label 'docker-agent'
+    }
 
     environment {
         DOCKER_NETWORK = 'taskManager_network'
@@ -8,13 +10,29 @@ pipeline {
         POSTGRES_DB = 'taskManagerDB'
         POSTGRES_USER = 'postgres'
         POSTGRES_PASSWORD = 'postgres'
+        
         BACKEND_IMAGE = 'taskmanager-backend-image'
         BACKEND_CONTAINER = 'taskManager-backend'
+        BACKEND_SECRET_KEY = credentials('SECRET_KEY')
         FRONTEND_IMAGE = 'taskmanager-frontend-image'
         FRONTEND_CONTAINER = 'taskManager-frontend'
+        
+        GIT_REPO = 'https://github.com/husainasad/TeamMate.git'
+        GIT_BRANCH = 'main'
     }
 
     stages {
+        stage('Checkout Code') {
+            steps {
+                script {
+                    deleteDir()
+                    checkout([$class: 'GitSCM',
+                              branches: [[name: "${env.GIT_BRANCH}"]],
+                              userRemoteConfigs: [[url: "${env.GIT_REPO}"]]])
+                }
+            }
+        }
+
         stage('Setup Network') {
             steps {
                 script {
@@ -22,6 +40,7 @@ pipeline {
                 }
             }
         }
+
         stage('Run Database') {
             steps {
                 script {
@@ -35,30 +54,35 @@ pipeline {
                 }
             }
         }
+
         stage('Build Backend') {
             steps {
                 script {
-                    sh "docker build -f TeamMate_DJ/backend.Dockerfile -t ${env.BACKEND_IMAGE} ."
+                    sh "docker build -f TeamMate_DJ/backend.Dockerfile -t ${env.BACKEND_IMAGE} TeamMate_DJ"
                 }
             }
         }
+
         stage('Run Backend') {
             steps {
                 script {
                     sh """
                         docker run -d --name ${env.BACKEND_CONTAINER} --network ${env.DOCKER_NETWORK} \
+                        -e SECRET_KEY=${env.BACKEND_SECRET_KEY} \
                         -p 8000:8000 ${env.BACKEND_IMAGE}
                     """
                 }
             }
         }
+
         stage('Build Frontend') {
             steps {
                 script {
-                    sh "docker build -f teammate_react/frontend.Dockerfile -t ${env.FRONTEND_IMAGE} ."
+                    sh "docker build -f teammate_react/frontend.Dockerfile -t ${env.FRONTEND_IMAGE} teammate_react"
                 }
             }
         }
+
         stage('Run Frontend') {
             steps {
                 script {
@@ -70,15 +94,20 @@ pipeline {
             }
         }
     }
+
     post {
         always {
             script {
                 sh """
                     docker stop ${env.FRONTEND_CONTAINER} ${env.BACKEND_CONTAINER} ${env.POSTGRES_CONTAINER} || true
                     docker rm ${env.FRONTEND_CONTAINER} ${env.BACKEND_CONTAINER} ${env.POSTGRES_CONTAINER} || true
-                    docker rmi ${env.BACKEND_IMAGE} ${env.FRONTEND_IMAGE} ${env.POSTGRES_IMAGE} || true
-                    docker network rm ${env.DOCKER_NETWORK} || true
                 """
+
+                sh """
+                    docker rmi ${env.BACKEND_IMAGE} ${env.FRONTEND_IMAGE} ${env.POSTGRES_IMAGE} || true
+                """
+
+                sh "docker network inspect ${env.DOCKER_NETWORK} >/dev/null 2>&1 && docker network rm ${env.DOCKER_NETWORK} || true"
             }
         }
     }
