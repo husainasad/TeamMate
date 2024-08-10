@@ -13,10 +13,9 @@ pipeline {
         
         BACKEND_IMAGE = 'taskmanager-backend-image'
         BACKEND_CONTAINER = 'taskManager-backend'
-        BACKEND_SECRET_KEY = credentials('SECRET_KEY')
         FRONTEND_IMAGE = 'taskmanager-frontend-image'
         FRONTEND_CONTAINER = 'taskManager-frontend'
-        
+
         GIT_REPO = 'https://github.com/husainasad/TeamMate.git'
         GIT_BRANCH = 'main'
     }
@@ -65,12 +64,14 @@ pipeline {
 
         stage('Run Backend') {
             steps {
-                script {
-                    sh """
-                        docker run -d --name ${env.BACKEND_CONTAINER} --network ${env.DOCKER_NETWORK} \
-                        -e SECRET_KEY=${env.BACKEND_SECRET_KEY} \
-                        -p 8000:8000 ${env.BACKEND_IMAGE}
-                    """
+                withCredentials([string(credentialsId: 'SECRET_KEY', variable: 'BACKEND_SECRET_KEY')]) {
+                    script {
+                        sh """
+                            docker run -d --name ${env.BACKEND_CONTAINER} --network ${env.DOCKER_NETWORK} \
+                            -e SECRET_KEY="${BACKEND_SECRET_KEY}" \
+                            -p 8000:8000 ${env.BACKEND_IMAGE}
+                        """
+                    }
                 }
             }
         }
