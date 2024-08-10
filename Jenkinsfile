@@ -16,21 +16,21 @@ pipeline {
         FRONTEND_IMAGE = 'taskmanager-frontend-image'
         FRONTEND_CONTAINER = 'taskManager-frontend'
 
-        GIT_REPO = 'https://github.com/husainasad/TeamMate.git'
-        GIT_BRANCH = 'main'
+        // GIT_REPO = 'https://github.com/husainasad/TeamMate.git'
+        // GIT_BRANCH = 'main'
     }
 
     stages {
-        stage('Checkout Code') {
-            steps {
-                script {
-                    deleteDir()
-                    checkout([$class: 'GitSCM',
-                              branches: [[name: "${env.GIT_BRANCH}"]],
-                              userRemoteConfigs: [[url: "${env.GIT_REPO}"]]])
-                }
-            }
-        }
+        // stage('Checkout Code') {
+        //     steps {
+        //         script {
+        //             deleteDir()
+        //             checkout([$class: 'GitSCM',
+        //                       branches: [[name: "${env.GIT_BRANCH}"]],
+        //                       userRemoteConfigs: [[url: "${env.GIT_REPO}"]]])
+        //         }
+        //     }
+        // }
 
         stage('Setup Network') {
             steps {
