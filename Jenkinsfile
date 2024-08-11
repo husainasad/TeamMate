@@ -54,43 +54,51 @@ pipeline {
             }
         }
 
-        stage('Build Backend') {
-            steps {
-                script {
-                    sh "docker build -f TeamMate_DJ/backend.Dockerfile -t ${env.BACKEND_IMAGE} TeamMate_DJ"
+        stage('Build') {
+            parallel {
+                stage('Build Backend') {
+                    steps {
+                        script {
+                            sh "docker build -f TeamMate_DJ/backend.Dockerfile -t ${env.BACKEND_IMAGE} TeamMate_DJ"
+                        }
+                    }
                 }
-            }
-        }
 
-        stage('Run Backend') {
-            steps {
-                withCredentials([string(credentialsId: 'SECRET_KEY', variable: 'BACKEND_SECRET_KEY')]) {
-                    script {
-                        sh """
-                            docker run -d --name ${env.BACKEND_CONTAINER} --network ${env.DOCKER_NETWORK} \
-                            -e SECRET_KEY="${BACKEND_SECRET_KEY}" \
-                            -p 8000:8000 ${env.BACKEND_IMAGE}
-                        """
+                stage('Build Frontend') {
+                    steps {
+                        script {
+                            sh "docker build -f teammate_react/frontend.Dockerfile -t ${env.FRONTEND_IMAGE} teammate_react"
+                        }
                     }
                 }
             }
         }
 
-        stage('Build Frontend') {
-            steps {
-                script {
-                    sh "docker build -f teammate_react/frontend.Dockerfile -t ${env.FRONTEND_IMAGE} teammate_react"
+        stage('Deploy') {
+            parallel {
+                stage('Deploy Backend') {
+                    steps {
+                        withCredentials([string(credentialsId: 'SECRET_KEY', variable: 'BACKEND_SECRET_KEY')]) {
+                            script {
+                                sh """
+                                    docker run -d --name ${env.BACKEND_CONTAINER} --network ${env.DOCKER_NETWORK} \
+                                    -e SECRET_KEY="${BACKEND_SECRET_KEY}" \
+                                    -p 8000:8000 ${env.BACKEND_IMAGE}
+                                """
+                            }
+                        }
+                    }
                 }
-            }
-        }
 
-        stage('Run Frontend') {
-            steps {
-                script {
-                    sh """
-                        docker run -d --name ${env.FRONTEND_CONTAINER} --network ${env.DOCKER_NETWORK} \
-                        -p 3000:3000 ${env.FRONTEND_IMAGE}
-                    """
+                stage('Deploy Frontend') {
+                    steps {
+                        script {
+                            sh """
+                                docker run -d --name ${env.FRONTEND_CONTAINER} --network ${env.DOCKER_NETWORK} \
+                                -p 3000:3000 ${env.FRONTEND_IMAGE}
+                            """
+                        }
+                    }
                 }
             }
         }
