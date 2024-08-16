@@ -1,10 +1,9 @@
 pipeline {
-    agent {
-        label 'docker-agent'
-    }
+    agent any
 
     environment {
         DOCKER_NETWORK = 'taskManager_network'
+
         POSTGRES_IMAGE = 'postgres:latest'
         POSTGRES_CONTAINER = 'postgres-db'
         POSTGRES_DB = 'taskManagerDB'
@@ -13,8 +12,11 @@ pipeline {
         
         BACKEND_IMAGE = 'taskmanager-backend-image'
         BACKEND_CONTAINER = 'taskManager-backend'
+        BACKEND_PORT = '8000'
+
         FRONTEND_IMAGE = 'taskmanager-frontend-image'
         FRONTEND_CONTAINER = 'taskManager-frontend'
+        FRONTEND_PORT = '3000'
 
         // GIT_REPO = 'https://github.com/husainasad/TeamMate.git'
         // GIT_BRANCH = 'main'
@@ -35,7 +37,7 @@ pipeline {
         stage('Setup Network') {
             steps {
                 script {
-                    sh "docker network create ${env.DOCKER_NETWORK} || true"
+                    sh "docker network inspect ${env.DOCKER_NETWORK} >/dev/null 2>&1 || docker network create ${env.DOCKER_NETWORK}"
                 }
             }
         }
@@ -83,7 +85,7 @@ pipeline {
                                 sh """
                                     docker run -d --name ${env.BACKEND_CONTAINER} --network ${env.DOCKER_NETWORK} \
                                     -e SECRET_KEY="${BACKEND_SECRET_KEY}" \
-                                    -p 8000:8000 ${env.BACKEND_IMAGE}
+                                    -p ${env.BACKEND_PORT}:${env.BACKEND_PORT} ${env.BACKEND_IMAGE}
                                 """
                             }
                         }
@@ -95,7 +97,7 @@ pipeline {
                         script {
                             sh """
                                 docker run -d --name ${env.FRONTEND_CONTAINER} --network ${env.DOCKER_NETWORK} \
-                                -p 3000:3000 ${env.FRONTEND_IMAGE}
+                                -p ${env.FRONTEND_PORT}:${env.FRONTEND_PORT} ${env.FRONTEND_IMAGE}
                             """
                         }
                     }
