@@ -47,4 +47,24 @@ The dockerfile for the Jenkins container is present as 'jenkins.Docker'.<br>
 Create the image using the command: `docker build -f jenkins.Dockerfile -t myjenkins:latest .`<br>
 
 ### 4. Run the Jenkins Container:
-Run the container in the same network using command:`docker run --name myjenkins --restart=on-failure -d --network jenkins_network --env DOCKER_HOST=tcp://docker:2376 --env DOCKER_CERT_PATH=/certs/client --env DOCKER_TLS_VERIFY=1 --volume jenkins-data:/var/jenkins_home --volume jenkins-docker-certs:/certs/client:ro --publish 8080:8080 myjenkins:latest`
+Run the container in the same network using command: `docker run --name myjenkins --restart=on-failure -d --network jenkins_network --env DOCKER_HOST=tcp://docker:2376 --env DOCKER_CERT_PATH=/certs/client --env DOCKER_TLS_VERIFY=1 --volume jenkins-data:/var/jenkins_home --volume jenkins-docker-certs:/certs/client:ro --publish 8080:8080 myjenkins:latest`
+
+#### Unlock Jenkins
+Retrieve the initial admin password: `docker logs myjenkins`
+or
+`docker exec myjenkins cat /var/jenkins_home/secrets/initialAdminPassword`
+
+<b> Note: If you want to use the container terminal, use the following command:`docker exec -it container-name sh`<br></b>
+
+### 5. Creating the Jenkins Pipeline
+
+#### Create a Pipeline
+- In Jenkins container, create a new pipeline.
+- Add the secrey key provided in local .env file of the backend application in the Jenkins credentials
+- For testing purposes, paste the Jenkinsfile script directly into the pipeline script section.
+
+#### Build the Pipeline
+Trigger a build and monitor the console output.
+
+### 6. Testing the application
+To test the application on host system, comment the post part of pipeline script.

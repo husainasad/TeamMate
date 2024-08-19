@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: taskmanager-frontend
+  namespace: taskmanager
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: taskmanager-frontend
+  template:
+    metadata:
+      labels:
+        app: taskmanager-frontend
+    spec:
+      containers:
+      - name: taskmanager-frontend
+        image: taskmanager-frontend-image
+        imagePullPolicy: Never  
+        env:
+        - name: REACT_APP_API_URL
+          value: "http://backend-service:8000/api/"
+        ports:
+        - containerPort: 3000

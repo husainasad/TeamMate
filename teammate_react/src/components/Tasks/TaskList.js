@@ -70,7 +70,9 @@ const TaskList = () => {
                                     </td>
                                     <td className="p-2 border-b text-center">{task.priority}</td>
                                     <td className="p-2 border-b text-center">{task.due_date}</td>
-                                    <td className="p-2 border-b text-center">{task.tags.map(tag => tag.name).join(', ')}</td>
+                                    <td className="p-2 border-b text-center">
+                                        {(task.tags || []).map(tag => tag.name).join(', ')}
+                                    </td>
                                     <td className="p-2 border-b text-center">{task.progress}</td>
                                 </tr>
                             ))}

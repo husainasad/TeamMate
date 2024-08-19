@@ -2,6 +2,7 @@ from django.urls import path
 from taskManager import views
 
 urlpatterns = [
+    path('health/', views.health_check, name='health_check'),
     path('tasks/', views.get_all_tasks, name='get_all_tasks'),
     path('tasks/member/', views.get_tasks_as_member, name='get_tasks_as_member'),
     path('tasks/owner/', views.get_tasks_as_owner, name='get_tasks_as_owner'),
