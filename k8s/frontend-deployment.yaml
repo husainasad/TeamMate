@@ -16,9 +16,10 @@ spec:
       containers:
       - name: taskmanager-frontend
         image: taskmanager-frontend-image
-        imagePullPolicy: Never  
+        imagePullPolicy: Never # To ensure local image is used
         env:
-        - name: REACT_APP_API_URL
-          value: "http://backend-service:8000/api/"
+        - name: BACKEND_URL
+          # value: "http://backend-service:8000/api/"
+          value: "http://localhost/api/" # Ingress path for backend service
         ports:
         - containerPort: 3000

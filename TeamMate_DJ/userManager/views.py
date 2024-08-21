@@ -6,6 +6,9 @@ from django.contrib.auth.models import User
 from userManager.serializers import UserSerializer
 from django.shortcuts import get_object_or_404
 from rest_framework.permissions import IsAdminUser
+import logging
+
+logger = logging.getLogger(__name__)
 
 @api_view(['GET'])
 @permission_classes([IsAdminUser])

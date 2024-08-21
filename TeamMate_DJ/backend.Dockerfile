@@ -10,5 +10,5 @@ COPY . /app/
 # ENV DB_PASSWORD=postgres
 # ENV DB_HOST=postgres-db
 # ENV DB_PORT=5432
-EXPOSE 8000
+# EXPOSE 8000
 CMD ["sh", "-c", "python manage.py makemigrations && python manage.py migrate && python manage.py runserver 0.0.0.0:8000"]

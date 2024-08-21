@@ -16,17 +16,9 @@ spec:
       containers:
       - name: taskmanager-backend
         image: taskmanager-backend-image
-        imagePullPolicy: Never  
-        env:
-        - name: DB_HOST
-          value: "postgres-service"
-        - name: DB_NAME
-          value: "taskManagerDB"
-        - name: DB_USER
-          value: "postgres"
-        - name: DB_PASSWORD
-          value: "postgres"
-        - name: DB_PORT
-          value: "5432"
+        imagePullPolicy: Never # To ensure local image is used
+        envFrom: # To pass env variables at run-time without exposing
+        - configMapRef:
+            name: taskmanager-backend-env
         ports:
         - containerPort: 8000

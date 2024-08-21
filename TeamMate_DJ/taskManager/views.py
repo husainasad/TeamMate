@@ -7,9 +7,13 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAdminUser
+import logging
+
+logger = logging.getLogger(__name__)
 
 def process_tags(input_tags):
-    tag_names = [tag.strip() for tag in input_tags.split(',') if tag.strip()]
+    # tag_names = [tag.strip() for tag in input_tags.split(',') if tag.strip()]
+    tag_names = [tag.strip() for tag in input_tags if tag.strip()]
     tags = []
     for tag_name in tag_names:
         tag, created = Tag.objects.get_or_create(name=tag_name)
@@ -62,7 +66,7 @@ def get_tasks_as_owner(request):
 @api_view(['GET'])
 def get_task_by_id(request, task_id):
     task = get_object_or_404(Task, id=task_id)
-    task_member = TaskMember.objects.filter(task=task, user=request.user).first()
+    # task_member = TaskMember.objects.filter(task=task, user=request.user).first()
     try:
         serializer = TaskSerializer(task)
         # task_data = serializer.data
@@ -84,6 +88,7 @@ def add_new_task(request):
                 TaskMember.objects.create(task=task, user=request.user, is_owner=True)
                 return Response(TaskSerializer(task).data, status=status.HTTP_201_CREATED)
         except Exception as e:
+            # logger.error('Error creating task', exc_info=True)
             return Response({'detail': f'Error creating task: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -104,6 +109,7 @@ def update_task_by_id(request, task_id):
                     updated_task.tags.set(updated_tags)
                     return Response(TaskSerializer(updated_task).data, status=status.HTTP_200_OK)
             except Exception as e:
+                # logger.error('Error updating task', exc_info=True)
                 return Response({'detail': f'Error updating task: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -122,6 +128,7 @@ def delete_task_by_id(request, task_id):
                 task.delete()
                 return Response(status=status.HTTP_204_NO_CONTENT)
         except Exception as e:
+            # logger.error('Error deleting task', exc_info=True)
             return Response({'detail': f'Error deleting task: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     else:
         return Response({'detail': 'You do not have permission to delete this task.'}, status=status.HTTP_403_FORBIDDEN)
@@ -149,6 +156,7 @@ def add_user_to_task(request, task_id):
             serializer = TaskMemberSerializer(task_member)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
     except Exception as e:
+        # logger.error('Error adding user to task', exc_info=True)
         return Response({'detail': f'Error adding user to task: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['DELETE'])
@@ -176,4 +184,5 @@ def remove_user_from_task(request, task_id):
             task_member.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
     except Exception as e:
+        # logger.error('Error removing user from task', exc_info=True)
         return Response({'detail': f'Error removing user from task: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

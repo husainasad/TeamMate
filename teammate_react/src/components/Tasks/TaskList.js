@@ -18,7 +18,8 @@ const TaskList = () => {
             }
             try {
                 const response = await getMemberTasks();
-                setTasks(response.data);
+                const responseArray = Array.isArray(response.data) ? response.data : [];
+                setTasks(responseArray);
             } catch (error) {
                 setError('Failed to fetch tasks. Please try again later.');
             } finally {
@@ -48,7 +49,7 @@ const TaskList = () => {
                     Add Task
                 </button>
             </div>
-            {tasks.length > 0 ? (
+            {Array.isArray(tasks) && tasks.length > 0 ? (
                 <div className="overflow-x-auto">
                     <table className="min-w-full bg-white border border-gray-200 rounded-md">
                         <thead className="bg-gray-100">
