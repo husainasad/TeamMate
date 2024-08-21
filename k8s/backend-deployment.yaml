@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: taskmanager-backend
+  namespace: taskmanager
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: taskmanager-backend
+  template:
+    metadata:
+      labels:
+        app: taskmanager-backend
+    spec:
+      containers:
+      - name: taskmanager-backend
+        image: taskmanager-backend-image
+        imagePullPolicy: Never # To ensure local image is used
+        envFrom: # To pass env variables at run-time without exposing
+        - configMapRef:
+            name: taskmanager-backend-env
+        ports:
+        - containerPort: 8000

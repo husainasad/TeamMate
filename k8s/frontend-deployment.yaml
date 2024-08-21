@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: taskmanager-frontend
+  namespace: taskmanager
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: taskmanager-frontend
+  template:
+    metadata:
+      labels:
+        app: taskmanager-frontend
+    spec:
+      containers:
+      - name: taskmanager-frontend
+        image: taskmanager-frontend-image
+        imagePullPolicy: Never # To ensure local image is used
+        env:
+        - name: BACKEND_URL
+          # value: "http://backend-service:8000/api/"
+          value: "http://localhost/api/" # Ingress path for backend service
+        ports:
+        - containerPort: 3000
