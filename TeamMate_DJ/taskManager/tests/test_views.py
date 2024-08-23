@@ -58,6 +58,36 @@ class TaskManagerViewTests(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
+    def test_get_tasks_as_member_no_membership(self):
+        self.client.force_authenticate(user=self.user2)
+
+        url = reverse('get_tasks_as_member')
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 0)
+
+    def test_get_tasks_as_member_with_memberships(self):
+        another_task = Task.objects.create(title="Another Task", description="Another Description", owner=self.user1)
+        TaskMember.objects.create(task=another_task, user=self.user1)
+
+        self.client.force_authenticate(user=self.user1)
+        
+        url = reverse('get_tasks_as_member')
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 2)
+        task_titles = [task['title'] for task in response.data]
+        self.assertIn(self.task.title, task_titles)
+        self.assertIn(another_task.title, task_titles)
+
+    def test_get_tasks_as_member_unauthenticated(self):
+        url = reverse('get_tasks_as_member')
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
     def test_get_task_by_id(self):
         self.client.force_authenticate(user=self.user1)
 

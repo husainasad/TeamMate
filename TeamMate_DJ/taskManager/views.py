@@ -42,6 +42,18 @@ def get_all_tasks(request):
     except Exception as e:
         # logger.error('Error creating tasks', exc_info=True)
         return Response({'detail': f'Error fetching tasks: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+@api_view(['GET'])
+def get_tasks_as_member(request):
+    try:
+        user = request.user
+        task_memberships = TaskMember.objects.filter(user=user)
+        tasks = Task.objects.filter(id__in=task_memberships.values_list('task_id', flat=True))
+        serializer = TaskSerializer(tasks, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    except Exception as e:
+        # logger.error('Error fetching member tasks', exc_info=True)
+        return Response({'detail': f'Error fetching member tasks: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['GET'])
 def get_task_by_id(request, task_id):
