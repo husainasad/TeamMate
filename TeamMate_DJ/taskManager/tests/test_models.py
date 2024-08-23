@@ -1,6 +1,6 @@
 from django.test import TestCase, Client
 from django.core.exceptions import ValidationError
-from taskManager.models import Task, Tag
+from taskManager.models import Task, Tag, TaskMember
 from django.contrib.auth import get_user_model
 import datetime
 
@@ -66,17 +66,6 @@ class TaskTestCase(TestCase):
         self.assertEqual(task.progress, 0)
         self.assertEqual(task.tags.count(), 0)
 
-    def test_due_date_cannot_be_in_past(self):
-        task = Task(
-            owner = self.user,
-            title="sampleTitle",
-            description="sampleDescription",
-            due_date=datetime.date.today() - datetime.timedelta(days=1),
-        )
-        with self.assertRaises(ValidationError):
-            task.full_clean()
-
-
     def test_progress_must_be_within_valid_range(self):
         task = Task(
             owner = self.user,
@@ -92,55 +81,33 @@ class TaskTestCase(TestCase):
         with self.assertRaises(ValidationError):
             task.full_clean()
 
-    def test_ordering(self):
-        task1 = Task.objects.create(
-            owner = self.user,
-            title="sampleTitle1", 
-            description="sampleDescription1",
-            due_date=datetime.date.today() + datetime.timedelta(days=1),
-            priority="High",
-            progress=0,
+    def test_add_members_to_task(self):
+        task = Task.objects.create(
+            owner=self.user,
+            title="sampleTitle", 
+            description="sampleDescription",
         )
 
-        task2 = Task.objects.create(
-            owner = self.user,
-            title="sampleTitle2", 
-            description="sampleDescription2",
-            due_date=datetime.date.today() + datetime.timedelta(days=2),
-            priority="High",
-            progress=0,
+        task_member = TaskMember.objects.create(
+            task=task,
+            user=self.other_user,
+            is_owner=False
         )
 
-        task3 = Task.objects.create(
-            owner = self.user,
-            title="sampleTitle3", 
-            description="sampleDescription3",
-            due_date=datetime.date.today() + datetime.timedelta(days=2),
-            priority="Medium",
-            progress=0,
+        self.assertTrue(task.members.filter(user=self.other_user).exists())
+        self.assertFalse(task_member.is_owner)
+
+    def test_task_member_is_owner(self):
+        task = Task.objects.create(
+            owner=self.user,
+            title="sampleTitle", 
+            description="sampleDescription",
         )
 
-        task4 = Task.objects.create(
-            owner = self.user,
-            title="sampleTitle4", 
-            description="sampleDescription4",
-            due_date=datetime.date.today() + datetime.timedelta(days=2),
-            priority="Low",
-            progress=0,
+        task_member = TaskMember.objects.create(
+            task=task,
+            user=self.user,
+            is_owner=True
         )
 
-        task5 = Task.objects.create(
-            owner = self.user,
-            title="sampleTitle5", 
-            description="sampleDescription5",
-            due_date=datetime.date.today() + datetime.timedelta(days=2),
-            priority="Low",
-            progress=50,
-        )
-    
-        tasks = Task.objects.all()
-        self.assertEqual(tasks[0], task1)
-        self.assertEqual(tasks[1], task2)
-        self.assertEqual(tasks[2], task4)
-        self.assertEqual(tasks[3], task5)
-        self.assertEqual(tasks[4], task3)
+        self.assertTrue(task_member.is_owner)

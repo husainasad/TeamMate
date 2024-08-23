@@ -40,40 +40,17 @@ def get_all_tasks(request):
         serializer = TaskSerializer(tasks, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
     except Exception as e:
+        # logger.error('Error creating tasks', exc_info=True)
         return Response({'detail': f'Error fetching tasks: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-@api_view(['GET'])
-def get_tasks_as_member(request):
-    try:
-        user = request.user
-        task_memberships = TaskMember.objects.filter(user=user)
-        tasks = Task.objects.filter(id__in=task_memberships.values_list('task_id', flat=True))
-        serializer = TaskSerializer(tasks, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-    except Exception as e:
-        return Response({'detail': f'Error fetching member tasks: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-    
-@api_view(['GET'])
-def get_tasks_as_owner(request):
-    try:
-        user = request.user
-        tasks = Task.objects.filter(owner=user)
-        serializer = TaskSerializer(tasks, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-    except Exception as e:
-        return Response({'detail': f'Error fetching owner tasks: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['GET'])
 def get_task_by_id(request, task_id):
     task = get_object_or_404(Task, id=task_id)
-    # task_member = TaskMember.objects.filter(task=task, user=request.user).first()
     try:
         serializer = TaskSerializer(task)
-        # task_data = serializer.data
-        # task_data['is_owner'] = task_member.is_owner if task_member else False
-        # return Response(task_data, status=status.HTTP_200_OK)
         return Response(serializer.data, status=status.HTTP_200_OK)
     except Exception as e:
+        # logger.error('Error fetching task by id', exc_info=True)
         return Response({'detail': f'Error fetching task by id: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['POST'])
@@ -179,7 +156,7 @@ def remove_user_from_task(request, task_id):
                 return Response({'detail': 'User is not a member of this task.'}, status=status.HTTP_400_BAD_REQUEST)
             
             if task_member.is_owner:
-                return Response({'detail': 'You cannot remove the task owner from the task.'}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({'detail': 'You cannot remove the task owner from the task.'}, status=status.HTTP_403_FORBIDDEN)
 
             task_member.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)

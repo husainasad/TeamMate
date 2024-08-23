@@ -1,193 +1,242 @@
-from django.test import TestCase, Client
 from django.urls import reverse
-from django.contrib.auth import get_user_model
-from taskManager.models import Task, Tag
-import datetime
+from django.contrib.auth.models import User
 from rest_framework import status
-from rest_framework.authtoken.models import Token
+from rest_framework.test import APITestCase
+from taskManager.models import Task, Tag, TaskMember
 
-class ViewTests(TestCase):
+class TaskManagerViewTests(APITestCase):
     def setUp(self):
-        self.client = Client()
-
-        self.user = get_user_model().objects.create_user(
-            username='testuser', 
-            password='testpassword'
+        self.admin_user = User.objects.create_superuser(
+            username='admin', 
+            password='adminpassword', 
+            email='admin@example.com'
         )
 
-        self.token = Token.objects.create(user=self.user)
-        self.auth_header = {'HTTP_AUTHORIZATION': f'Token {self.token.key}'}
-
-        self.other_user = get_user_model().objects.create_user(
-            username='otheruser', 
-            password='otherpassword'
+        self.user1 = User.objects.create_user(
+            username='user1', 
+            password='password1', 
+            email='user1@example.com'
         )
 
-        self.other_token = Token.objects.create(user=self.other_user)
-        self.other_auth_header = {'HTTP_AUTHORIZATION': f'Token {self.other_token.key}'}
-
-        self.task1 = Task.objects.create(
-            owner = self.user,
-            title="sampleTitle1", 
-            description="sampleDescription1",
+        self.user2 = User.objects.create_user(
+            username='user2', 
+            password='password2', 
+            email='user2@example.com'
         )
 
-        self.task2 = Task.objects.create(
-            owner=self.user,
-            title="sampleTitle2", 
-            description="sampleDescription2",
-            progress=100,
+        self.task = Task.objects.create(
+            title="Test Task", 
+            description="Test Description", 
+            owner=self.user1
         )
 
-        self.other_user_task = Task.objects.create(
-            owner=self.other_user,
-            title="otherUserTask",
-            description="other user task description"
-        )
+        self.tag = Tag.objects.create(name="Test Tag")
+        self.task.tags.add(self.tag)
+        self.task_member = TaskMember.objects.create(task=self.task, user=self.user1, is_owner=True)
 
-        self.tag1 = Tag.objects.create(name="sampleTag1")
-        self.tag2 = Tag.objects.create(name="sampleTag2")
+    def test_health_check(self):
+        url = reverse('health_check')
+        response = self.client.get(url)
 
-        self.task1.tags.add(self.tag1)
-        self.task2.tags.add(self.tag2)
-    
-    def test_display_tasks_unauthenticated(self):
-        response = self.client.get(reverse('display_tasks'))
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
-
-    def test_display_tasks(self):
-        response = self.client.get(reverse('display_tasks'), **self.auth_header)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        
-        response_data = response.json()
-        self.assertEqual(response_data['username'], 'testuser')
-        self.assertEqual(len(response_data['tasks']), 2)
+        self.assertEqual(response.data, {'status': 'ok', 'message': 'Service is healthy'})
 
-        response = self.client.get(reverse('display_tasks'), {'status': 'completed'}, **self.auth_header)
+    def test_admin_can_get_all_tasks(self):
+        self.client.force_authenticate(user=self.admin_user)
+
+        url = reverse('get_all_tasks')
+        response = self.client.get(url)
+
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), Task.objects.count())
 
-        response_data = response.json()
-        self.assertEqual(len(response_data['tasks']), 1)
+    def test_non_admin_cannot_get_all_tasks(self):
+        self.client.force_authenticate(user=self.user1)
 
-        response = self.client.get(reverse('display_tasks'), {'status': 'pending'}, **self.auth_header)
+        url = reverse('get_all_tasks')
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_get_task_by_id(self):
+        self.client.force_authenticate(user=self.user1)
+
+        url = reverse('get_task_by_id', args=[self.task.id])
+        response = self.client.get(url)
+
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        
-        response_data = response.json()
-        self.assertEqual(len(response_data['tasks']), 1)
+        self.assertEqual(response.data['title'], self.task.title)
 
-    def test_add_task_unauthenticated(self):
-        response = self.client.post(reverse('add_task'), {
-            'title': 'title1',
-            'description': 'description1',
-            'due_date': datetime.date.today() + datetime.timedelta(days=1),
-            'tags': 'tag1, tag2, tag3',
-            'priority': 'Low',
-            'progress': 25
-        })
+    def test_get_task_by_id_not_found(self):
+        self.client.force_authenticate(user=self.user1)
 
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        url = reverse('get_task_by_id', args=[999])
+        response = self.client.get(url)
 
-    def test_add_task(self):
-        response = self.client.post(reverse('add_task'), {
-            'title': 'title1',
-            'description': 'description1',
-            'due_date': datetime.date.today() + datetime.timedelta(days=1),
-            'tags': 'tag1, tag2, tag3',
-            'priority': 'Low',
-            'progress': 25
-        }, **self.auth_header)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_add_new_task(self):
+        self.client.force_authenticate(user=self.user1)
+
+        url = reverse('add_new_task')
+        data = {
+            'title': 'New Task', 
+            'description': 'New Task Description', 
+            'tags': ['New Tag']
+        }
+
+        response = self.client.post(url, data, format='json')
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        
-        response_data = response.json()
-        self.assertEqual(response_data['title'], 'title1')
-        self.assertEqual(response_data['progress'], 25)
-        self.assertEqual(len(response_data['tags']), 3)
-        self.assertTrue(Tag.objects.filter(name='tag1').exists())
-        self.assertTrue(Tag.objects.filter(name='tag2').exists())
-        self.assertTrue(Tag.objects.filter(name='tag3').exists())
+        self.assertEqual(Task.objects.count(), 2)
 
-    def test_task_details_unauthenticated(self):
-        response = self.client.get(reverse('task_details', args=[self.task1.id]))
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+    def test_add_new_task_invalid_data(self):
+        self.client.force_authenticate(user=self.user1)
 
-    def test_task_details(self):
-        response = self.client.get(reverse('task_details', args=[self.task1.id]), **self.auth_header)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        
-        response_data = response.json()
-        self.assertEqual(response_data['title'], self.task1.title)
-        self.assertEqual(response_data['description'], self.task1.description)
+        url = reverse('add_new_task')
+        data = {
+            'description': 'No Title'
+        }
 
-    def test_update_task_get_unauthenticated(self):
-        response = self.client.put(reverse('update_task', args=[self.task1.id]), {
-            'title': 'newTitle',
-            'description': 'newDescription',
-            'due_date': datetime.date.today() + datetime.timedelta(days=2),
-            'tags': 'sampleTag2, newTag1',
-            'priority': 'Medium',
-            'progress': 25
-        })
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+    def test_update_task_by_id(self):
+        self.client.force_authenticate(user=self.user1)
 
-    def test_update_task(self):
-        response = self.client.put(reverse('update_task', args=[self.task1.id]), {
-            'title': 'newTitle',
-            'description': 'newDescription',
-            'due_date': datetime.date.today() + datetime.timedelta(days=2),
-            'tags': 'sampleTag2, newTag1',
-            'priority': 'Medium',
-            'progress': 25
-        }, **self.auth_header, content_type='application/json')
+        url = reverse('update_task_by_id', args=[self.task.id])
+        data = {
+            'title': 'Updated Task'
+        }
+
+        response = self.client.put(url, data, format='json')
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.task.refresh_from_db()
+        self.assertEqual(self.task.title, 'Updated Task')
 
-        cur_task = Task.objects.get(id=self.task1.id)
-        self.assertEqual(cur_task.title, 'newTitle')
-        self.assertEqual(cur_task.description, 'newDescription')
-        self.assertEqual(cur_task.due_date, datetime.date.today() + datetime.timedelta(days=2))
-        self.assertEqual(cur_task.progress, 25)
-        self.assertEqual(cur_task.tags.count(), 2)
-        self.assertFalse(Tag.objects.filter(name='sampleTag1').exists())
-        self.assertTrue(Tag.objects.filter(name='sampleTag2').exists())
-        self.assertTrue(Tag.objects.filter(name='newTag1').exists())
+    def test_update_task_by_id_as_member(self):
+        self.client.force_authenticate(user=self.user2)
 
-    def test_only_owner_can_update_task(self):
-        response = self.client.put(reverse('update_task', args=[self.task1.id]), {
-            'title': 'unauthorizedTitle',
-            'description': 'unauthorizedDescription',
-            'due_date': datetime.date.today() + datetime.timedelta(days=2),
-            'tags': 'sampleTag2, newTag1',
-            'priority': 'Medium',
-            'progress': 25
-        }, **self.other_auth_header, content_type='application/json')
+        TaskMember.objects.create(task=self.task, user=self.user2)
+        url = reverse('update_task_by_id', args=[self.task.id])
+        data = {
+            'title': 'Member Update'
+        }
+
+        response = self.client.put(url, data, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.task.refresh_from_db()
+        self.assertEqual(self.task.title, 'Member Update')
+
+    def test_update_task_by_id_no_permission(self):
+        self.client.force_authenticate(user=self.user2)
+
+        url = reverse('update_task_by_id', args=[self.task.id])
+        data = {
+            'title': 'Unauthorized Update'
+        }
+
+        response = self.client.put(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_delete_task_by_id(self):
+        self.client.force_authenticate(user=self.user1)
+
+        url = reverse('delete_task_by_id', args=[self.task.id])
+        response = self.client.delete(url)
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(Task.objects.count(), 0)
+
+    def test_delete_task_by_id_as_member(self):
+        self.client.force_authenticate(user=self.user2)
+
+        TaskMember.objects.create(task=self.task, user=self.user2)
+        url = reverse('delete_task_by_id', args=[self.task.id])
+        response = self.client.delete(url)
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_delete_task_by_id_no_permission(self):
+        self.client.force_authenticate(user=self.user2)
+
+        url = reverse('delete_task_by_id', args=[self.task.id])
+        response = self.client.delete(url)
 
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
-    def test_delete_task_unauthenticated(self):
-        response = self.client.delete(reverse('delete_task', args=[self.task1.id]))
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+    def test_add_user_to_task(self):
+        self.client.force_authenticate(user=self.user1)
 
-    def test_delete_task(self):
-        temp_task = Task.objects.create(
-            owner=self.user,
-            title="temp title", 
-            description="temp description",
-        )
-        
-        temp_task.tags.add(self.tag1)
+        url = reverse('add_user_to_task', args=[self.task.id])
+        data = {
+            'username': 'user2'
+        }
 
-        response = self.client.delete(reverse('delete_task', args=[self.task1.id]), **self.auth_header)
+        response = self.client.post(url, data, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(TaskMember.objects.filter(task=self.task, user=self.user2).count(), 1)
+
+    def test_add_user_to_task_no_permission(self):
+        self.client.force_authenticate(user=self.user2)
+
+        url = reverse('add_user_to_task', args=[self.task.id])
+        data = {'username': 'user2'}
+        response = self.client.post(url, data, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_remove_user_from_task(self):
+        self.client.force_authenticate(user=self.user1)
+
+        TaskMember.objects.create(task=self.task, user=self.user2)
+
+        url = reverse('remove_user_from_task', args=[self.task.id])
+        data = {'username': 'user2'}
+        response = self.client.delete(url, data, format='json')
+
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
-        self.assertFalse(Task.objects.filter(id=self.task1.id).exists())
-        self.assertTrue(Tag.objects.filter(name='sampleTag1').exists())
+        self.assertEqual(TaskMember.objects.filter(task=self.task, user=self.user2).count(), 0)
 
-        response = self.client.delete(reverse('delete_task', args=[temp_task.id]), **self.auth_header)
-        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
-        self.assertFalse(Task.objects.filter(id=temp_task.id).exists())
-        self.assertFalse(Tag.objects.filter(name='sampleTag1').exists())
+    def test_remove_user_from_task_no_permission(self):
+        self.client.force_authenticate(user=self.user2)
 
-    def test_only_owner_can_delete_task(self):
-        response = self.client.delete(reverse('delete_task', args=[self.task1.id]), **self.other_auth_header)
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        url = reverse('remove_user_from_task', args=[self.task.id])
+        data = {'username': 'admin'}
+        response = self.client.delete(url, data, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_remove_owner_from_task(self):
+        self.client.force_authenticate(user=self.user2)
+
+        TaskMember.objects.create(task=self.task, user=self.user2)
+
+        url = reverse('remove_user_from_task', args=[self.task.id])
+        data = {'username': 'user1'}
+        response = self.client.delete(url, data, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_remove_owner_from_task_as_owner(self):
+        self.client.force_authenticate(user=self.user1)
+
+        url = reverse('remove_user_from_task', args=[self.task.id])
+        data = {'username': 'user1'}
+        response = self.client.delete(url, data, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_remove_self_from_task(self):
+        self.client.force_authenticate(user=self.user2)
+
+        TaskMember.objects.create(task=self.task, user=self.user2)
+
+        url = reverse('remove_user_from_task', args=[self.task.id])
+        data = {'username': 'user2'}
+        response = self.client.delete(url, data, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)

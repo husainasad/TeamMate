@@ -1,22 +1,22 @@
 from django.test import TestCase
 from django.urls import resolve, reverse
 from userManager.views import (
-    user_login, user_logout, user_signup
+    user_list, user_detail, register_user
 )
 
 class URLTests(TestCase):
 
-    def test_login(self):
-        url = reverse('login')
+    def test_user_list(self):
+        url = reverse('user_list')
         found = resolve(url)
-        self.assertEqual(found.func, user_login)
+        self.assertEqual(found.func, user_list)
 
-    def test_logout(self):
-        url = reverse('logout')
+    def test_user_detail(self):
+        url = reverse('user_detail', args=[1])
         found = resolve(url)
-        self.assertEqual(found.func, user_logout)
+        self.assertEqual(found.func, user_detail)
 
-    def test_signup(self):
-        url = reverse('signup')
+    def test_user_registration(self):
+        url = reverse('register_user')
         found = resolve(url)
-        self.assertEqual(found.func, user_signup)
+        self.assertEqual(found.func, register_user)

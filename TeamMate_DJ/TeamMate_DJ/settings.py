@@ -111,25 +111,14 @@ WSGI_APPLICATION = 'TeamMate_DJ.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
-import configparser
-import os
-
-config = configparser.ConfigParser()
-config.read('config.ini')
-
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        # 'NAME': os.getenv('DB_NAME', config.get('database', 'database_name')),
-        # 'USER': os.getenv('DB_USER', config.get('database', 'username')),
-        # 'PASSWORD': os.getenv('DB_PASSWORD', config.get('database', 'password')),
-        # 'HOST': os.getenv('DB_HOST', config.get('database', 'url')),
-        # 'PORT': os.getenv('DB_PORT', config.get('database', 'port')),
-        'NAME': os.getenv('DB_NAME'),
-        'USER': os.getenv('DB_USER'),
-        'PASSWORD': os.getenv('DB_PASSWORD'),
-        'HOST': os.getenv('DB_HOST'),
-        'PORT': os.getenv('DB_PORT'),
+        'NAME': config('DB_NAME'),
+        'USER': config('DB_USER'),
+        'PASSWORD': config('DB_PASSWORD'),
+        'HOST': config('DB_HOST'),
+        'PORT': config('DB_PORT'),
     }
 }
 
