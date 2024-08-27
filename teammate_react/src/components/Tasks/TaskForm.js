@@ -5,7 +5,7 @@ const TaskForm = ({ initialData, onSubmit, onCancel }) => {
     const [title, setTitle] = useState(initialData.title || '');
     const [description, setDescription] = useState(initialData.description || '');
     const [dueDate, setDueDate] = useState(initialData.due_date || new Date().toISOString().split('T')[0]);
-    const [tags, setTags] = useState(initialData.tags ? initialData.tags.join(', ') : '');
+    const [tags, setTags] = useState(initialData.tags ? initialData.tags.map(tag => tag.name).join(', ') : '');
     const [priority, setPriority] = useState(initialData.priority || 'High');
     const [progress, setProgress] = useState(initialData.progress || 0);
 
@@ -45,8 +45,9 @@ const TaskForm = ({ initialData, onSubmit, onCancel }) => {
             {/* <h2 className="text-2xl font-bold mb-4">Task Form</h2> */}
             <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="flex flex-col space-y-2">
-                    <label className="font-semibold">Title:</label>
+                    <label htmlFor="title" className="font-semibold">Title:</label>
                     <input
+                        id="title"
                         type="text"
                         value={title}
                         onChange={(e) => setTitle(e.target.value)}
@@ -55,8 +56,9 @@ const TaskForm = ({ initialData, onSubmit, onCancel }) => {
                     />
                 </div>
                 <div className="flex flex-col space-y-2">
-                    <label className="font-semibold">Description:</label>
+                    <label htmlFor="description" className="font-semibold">Description:</label>
                     <input
+                        id="description"
                         type="text"
                         value={description}
                         onChange={(e) => setDescription(e.target.value)}
@@ -65,8 +67,9 @@ const TaskForm = ({ initialData, onSubmit, onCancel }) => {
                     />
                 </div>
                 <div className="flex flex-col space-y-2">
-                    <label className="font-semibold">Priority:</label>
+                    <label htmlFor="priority" className="font-semibold">Priority:</label>
                     <select
+                        id="priority"
                         value={priority}
                         onChange={(e) => setPriority(e.target.value)}
                         className="p-2 border border-gray-300 rounded-md"
@@ -77,8 +80,9 @@ const TaskForm = ({ initialData, onSubmit, onCancel }) => {
                     </select>
                 </div>
                 <div className="flex flex-col space-y-2">
-                    <label className="font-semibold">Due Date:</label>
+                    <label htmlFor="dueDate" className="font-semibold">Due Date:</label>
                     <input
+                        id="dueDate"
                         type="date"
                         value={dueDate}
                         onChange={(e) => setDueDate(e.target.value)}
@@ -87,8 +91,9 @@ const TaskForm = ({ initialData, onSubmit, onCancel }) => {
                     />
                 </div>
                 <div className="flex flex-col space-y-2">
-                    <label className="font-semibold">Tags (comma-separated):</label>
+                    <label htmlFor="tags" className="font-semibold">Tags (comma-separated):</label>
                     <input
+                        id="tags"
                         type="text"
                         value={tags}
                         onChange={(e) => setTags(e.target.value)}
@@ -96,8 +101,9 @@ const TaskForm = ({ initialData, onSubmit, onCancel }) => {
                     />
                 </div>
                 <div className="flex flex-col space-y-2">
-                    <label className="font-semibold">Progress (%):</label>
+                    <label htmlFor="progress" className="font-semibold">Progress (%):</label>
                     <input
+                        id="progress"
                         type="number"
                         value={progress}
                         onChange={(e) => setProgress(e.target.value)}

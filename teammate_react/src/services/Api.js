@@ -34,3 +34,5 @@ export const deleteTask = (id) => api.delete(`tasks/${id}/delete/`, { headers: a
 
 export const addMember = (id, taskData) => api.post(`tasks/${id}/addMember/`, taskData, { headers: authHeader() });
 export const removeMember = (id, taskData) => api.delete(`tasks/${id}/removeMember/`, { data: taskData, headers: authHeader() });
+
+export { api, authHeader };
