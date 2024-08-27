@@ -17,7 +17,7 @@ function App() {
       <Route path="/" element={<PrivateRoute><TaskList /></PrivateRoute>} />
       <Route path="/add-task" element={<PrivateRoute><AddTask /></PrivateRoute>} />
       <Route path="/tasks/:id" element={<PrivateRoute><TaskDetails /></PrivateRoute>} />
-      <Route path="/tasks/:id/edit" element={<PrivateRoute><EditTask /></PrivateRoute>} />
+      <Route path="/tasks/:id/edit-task" element={<PrivateRoute><EditTask /></PrivateRoute>} />
     </Routes>
   );
 }

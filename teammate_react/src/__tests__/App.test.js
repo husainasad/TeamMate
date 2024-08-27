@@ -55,7 +55,7 @@ describe('App Component', () => {
   });
 
   test('renders EditTask component for authenticated user at /tasks/:id/edit route', () => {
-    renderWithRoute('/tasks/1/edit', true);
+    renderWithRoute('/tasks/1/edit-task', true);
     expect(screen.getByText('EditTask Component')).toBeInTheDocument();
     expect(screen.getByText('Header Component')).toBeInTheDocument();
   });

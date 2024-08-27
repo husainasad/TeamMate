@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
-import AuthProvider, { AuthContext } from './../components/Auth/AuthContext';
+import AuthProvider, { AuthContext } from './../../../components/Auth/AuthContext';
 
 const TestComponent = () => {
   const { isAuthenticated, user, login, logout } = React.useContext(AuthContext);

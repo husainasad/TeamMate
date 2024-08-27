@@ -1,10 +1,10 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
-import AuthProvider, { AuthContext } from './../components/Auth/AuthContext';
-import PrivateRoute from './../components/Auth/PrivateRoute';
+import AuthProvider, { AuthContext } from '../../../components/Auth/AuthContext';
+import PrivateRoute from './../../../components/Auth/PrivateRoute';
 
-jest.mock('./../components/Tasks/Header', () => () => <div>Header</div>);
+jest.mock('./../../../components/Tasks/Header', () => () => <div>Header</div>);
 
 const TestComponent = () => <div>Protected Content</div>;
 

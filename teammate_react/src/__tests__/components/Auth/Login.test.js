@@ -1,12 +1,12 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import Login from './../components/Auth/Login';
-import { AuthContext } from './../components/Auth/AuthContext';
-import { loginUser } from './../services/Api';
+import Login from './../../../components/Auth/Login';
+import { AuthContext } from './../../../components/Auth/AuthContext';
+import { loginUser } from './../../../services/Api';
 import { useNavigate } from 'react-router-dom';
 
-jest.mock('./../services/Api');
+jest.mock('./../../../services/Api');
 jest.mock('react-router-dom', () => ({
   ...jest.requireActual('react-router-dom'),
   useNavigate: jest.fn(),
