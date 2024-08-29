@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useContext } from 'react';
-import { getTaskById, deleteTask, addMember, removeMember } from '../../services/Api';
+import { getTaskById, deleteTask } from '../../services/Api';
 import { useParams, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../Auth/AuthContext';
 import MemberList from './MemberList';
@@ -17,7 +17,6 @@ const TaskDetails = () => {
     const [loading, setLoading] = useState(true);
     const [membersVisible, setMembersVisible] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
-    const [newUsername, setNewUsername] = useState('');
     const { isAuthenticated, user } = useContext(AuthContext);
 
     useEffect(() => {
@@ -56,41 +55,17 @@ const TaskDetails = () => {
         }
     };
 
-    const handleAddMember = async () => {
-        if (!newUsername.trim()) {
-            setErrorMessage('Username cannot be empty');
-            setShowErrorModal(true);
-            return;
-        }
-
-        try {
-            const response = await addMember(id, { username: newUsername });
-            const newMember = response.data;
+    const handleMemberChange = (action, memberOrUsername) => {
+        if (action === 'add') {
             setTask(prevTask => ({
                 ...prevTask,
-                members: [...prevTask.members, newMember]
+                members: [...prevTask.members, memberOrUsername]
             }));
-            setSuccessMessage('User added successfully');
-            setShowSuccessModal(true);
-            setNewUsername('');
-        } catch (error) {
-            setErrorMessage('Error adding user');
-            setShowErrorModal(true);
-        }
-    };
-
-    const handleRemoveMember = async (username) => {
-        try {
-            await removeMember(id, { username });
+        } else if (action === 'remove') {
             setTask(prevTask => ({
                 ...prevTask,
-                members: prevTask.members.filter(member => member.user !== username)
+                members: prevTask.members.filter(member => member.user !== memberOrUsername)
             }));
-            setSuccessMessage('User removed successfully');
-            setShowSuccessModal(true);
-        } catch (error) {
-            setErrorMessage('Error removing user');
-            setShowErrorModal(true);
         }
     };
 
@@ -186,31 +161,13 @@ const TaskDetails = () => {
                     </button>
                 </div>
                 {membersVisible && (
-                    <div>
-                        <MemberList
-                            members={task.members || []}
-                            isOwner={isOwner}
-                            ownerUsername={task.owner}
-                            onRemoveMember={handleRemoveMember}
-                        />
-                        {isOwner && (
-                            <div className="add-member bg-gray-100 p-4 rounded-md mt-4">
-                                <input
-                                    type="text"
-                                    value={newUsername}
-                                    onChange={(e) => setNewUsername(e.target.value)}
-                                    placeholder="Enter username"
-                                    className="w-full p-2 border border-gray-300 rounded-md mb-2"
-                                />
-                                <button
-                                    onClick={handleAddMember}
-                                    className="bg-green-500 text-white p-2 rounded-md hover:bg-green-600 transition"
-                                >
-                                    Add Member
-                                </button>
-                            </div>
-                        )}
-                    </div>
+                    <MemberList
+                        taskId = {id}
+                        members={task.members || []}
+                        isOwner={isOwner}
+                        ownerUsername={task.owner}
+                        onMemberChange={handleMemberChange}
+                    />
                 )}
             </div>
             
