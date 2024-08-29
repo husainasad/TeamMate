@@ -1,14 +1,13 @@
 import React, { useState } from 'react';
 import { registerUser } from '../../services/Api';
 import { useNavigate } from 'react-router-dom';
-import ErrorModal from '../Tasks/ErrorModal';
+import { ErrorModal } from '../Tasks/FeedbackModal';
 
 const Register = () => {
     const [username, setUsername] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const [showErrorModal, setShowErrorModal] = useState(false);
-    const [errorMessage, setErrorMessage] = useState('');
+    const [modal, setModal] = useState({ type: null, message: '' });
     const navigate = useNavigate();
 
     const handleSubmit = async (e) => {
@@ -17,9 +16,12 @@ const Register = () => {
             await registerUser({ username, email, password });
             navigate('/login');
         } catch (error) {
-            setErrorMessage('Registration failed. Please try again.');
-            setShowErrorModal(true);
+            setModal({ type: 'error', message: 'Registration failed. Please try again.' });
         }
+    };
+
+    const closeModal = () => {
+        setModal({ type: null, message: '' });
     };
 
     return (
@@ -67,10 +69,10 @@ const Register = () => {
                     </button>
                 </div>
             </div>
-            {showErrorModal && (
+            {modal.type && modal.type === 'error' && (
                 <ErrorModal
-                    message={errorMessage}
-                    onClose={() => setShowErrorModal(false)}
+                    message={modal.message}
+                    onClose={closeModal}
                 />
             )}
         </div>

@@ -2,13 +2,12 @@ import React, { useEffect, useState, useContext } from 'react';
 import { getMemberTasks } from '../../services/Api';
 import { useNavigate, Link } from 'react-router-dom';
 import { AuthContext } from '../Auth/AuthContext';
-import ErrorModal from '../Tasks/ErrorModal';
+import { ErrorModal} from '../Tasks/FeedbackModal';
 
 const TaskList = () => {
     const [tasks, setTasks] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [showErrorModal, setShowErrorModal] = useState(false);
-    const [errorMessage, setErrorMessage] = useState('');
+    const [modal, setModal] = useState({ type: null, message: '' });
     const { isAuthenticated } = useContext(AuthContext);
     const navigate = useNavigate();
 
@@ -23,8 +22,7 @@ const TaskList = () => {
                 const responseArray = Array.isArray(response.data) ? response.data : [];
                 setTasks(responseArray);
             } catch (error) {
-                setErrorMessage('Failed to fetch tasks. Please try again later.');
-                setShowErrorModal(true);
+                setModal({ type: 'error', message: 'Failed to fetch tasks. Please try again later.' });
             } finally {
                 setLoading(false);
             }
@@ -36,6 +34,10 @@ const TaskList = () => {
     if (loading) {
         return <p className="text-center">Loading tasks...</p>;
     }
+
+    const closeModal = () => {
+        setModal({ type: null, message: '' });
+    };
 
     return (
         <div className="p-4 max-w-4xl mx-auto">
@@ -82,12 +84,12 @@ const TaskList = () => {
             ) : (
                 <p className="text-center">No tasks available.</p>
             )}
-            {showErrorModal && (
-        <ErrorModal
-            message={errorMessage}
-            onClose={() => setShowErrorModal(false)}
-        />
-    )}
+            {modal.type && modal.type === 'error' && (
+                <ErrorModal
+                    message={modal.message}
+                    onClose={closeModal}
+                />
+            )}
         </div>
     );
 };

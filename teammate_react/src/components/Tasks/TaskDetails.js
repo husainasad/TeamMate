@@ -3,17 +3,13 @@ import { getTaskById, deleteTask } from '../../services/Api';
 import { useParams, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../Auth/AuthContext';
 import MemberList from './MemberList';
-import ErrorModal from '../Tasks/ErrorModal';
-import SuccessModal from '../Tasks/SuccessModal';
+import { ErrorModal, SuccessModal} from '../Tasks/FeedbackModal';
 
 const TaskDetails = () => {
     const { id } = useParams();
     const navigate = useNavigate();
     const [task, setTask] = useState({ tags: [], members: [] });
-    const [showErrorModal, setShowErrorModal] = useState(false);
-    const [showSuccessModal, setShowSuccessModal] = useState(false);
-    const [errorMessage, setErrorMessage] = useState('');
-    const [successMessage, setSuccessMessage] = useState('');
+    const [modal, setModal] = useState({ type: null, message: '' });
     const [loading, setLoading] = useState(true);
     const [membersVisible, setMembersVisible] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
@@ -30,8 +26,7 @@ const TaskDetails = () => {
                 const response = await getTaskById(id);
                 setTask(response.data);
             } catch (error) {
-                setErrorMessage('Failed to fetch task. Please try again later.');
-                setShowErrorModal(true);
+                setModal({ type: 'error', message: 'Failed to fetch task. Please try again later.' });
             } finally {
                 setLoading(false);
             }
@@ -44,12 +39,10 @@ const TaskDetails = () => {
         setIsDeleting(true);
         try {
             await deleteTask(id);
-            setSuccessMessage('Task deleted successfully');
-            setShowSuccessModal(true);
+            setModal({ type: 'success', message: 'Task deleted successfully' });
             setTimeout(() => navigate('/'), 1500);
         } catch (error) {
-            setErrorMessage('Error deleting task');
-            setShowErrorModal(true);
+            setModal({ type: 'error', message: 'Error deleting task' });
         } finally {
             setIsDeleting(false);
         }
@@ -70,10 +63,7 @@ const TaskDetails = () => {
     };
 
     const closeModal = () => {
-        setShowErrorModal(false);
-        setShowSuccessModal(false);
-        setErrorMessage('');
-        setSuccessMessage('');
+        setModal({ type: null, message: '' });
     };
 
     const isOwner = task.owner === user?.username;
@@ -95,7 +85,7 @@ const TaskDetails = () => {
             <div className="bg-white shadow-lg rounded-md p-6 mb-6">
                 <div className="flex justify-between items-center mb-4">
                     <h2 className="text-2xl font-bold mb-4">
-                        {loading ? 'Loading task details...' : errorMessage ? 'Error loading task' : `${task.title} Details`}
+                        {loading ? 'Loading task details...' : modal.type === 'error' ? 'Error loading task' : `${task.title} Details`}
                     </h2>
                     <div className="space-x-2">
                         <button
@@ -171,16 +161,16 @@ const TaskDetails = () => {
                 )}
             </div>
             
-            {showErrorModal && (
+            {modal.type && modal.type === 'error' && (
                 <ErrorModal
-                    message={errorMessage}
+                    message={modal.message}
                     onClose={closeModal}
                 />
             )}
 
-            {showSuccessModal && (
+            {modal.type && modal.type === 'success' && (
                 <SuccessModal
-                    message={successMessage}
+                    message={modal.message}
                     onClose={closeModal}
                 />
             )}

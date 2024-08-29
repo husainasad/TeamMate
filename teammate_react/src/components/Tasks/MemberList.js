@@ -1,19 +1,14 @@
 import React, { useState } from 'react';
 import { addMember, removeMember } from '../../services/Api';
-import ErrorModal from '../Tasks/ErrorModal';
-import SuccessModal from '../Tasks/SuccessModal';
+import { ErrorModal, SuccessModal} from '../Tasks/FeedbackModal';
 
 const MemberList = ({ taskId, members = [], isOwner, ownerUsername, onMemberChange }) => {
     const [newUsername, setNewUsername] = useState('');
-    const [showErrorModal, setShowErrorModal] = useState(false);
-    const [showSuccessModal, setShowSuccessModal] = useState(false);
-    const [errorMessage, setErrorMessage] = useState('');
-    const [successMessage, setSuccessMessage] = useState('');    
+    const [modal, setModal] = useState({ type: null, message: '' });
 
     const handleAddMember = async () => {
         if (!newUsername.trim()) {
-            setErrorMessage('Username cannot be empty');
-            setShowErrorModal(true);
+            setModal({ type: 'error', message: 'Username cannot be empty' });
             return;
         }
 
@@ -21,12 +16,10 @@ const MemberList = ({ taskId, members = [], isOwner, ownerUsername, onMemberChan
             const response = await addMember(taskId, { username: newUsername });
             const newMember = response.data;
             onMemberChange('add', newMember);
-            setSuccessMessage('User added successfully');
-            setShowSuccessModal(true);
+            setModal({ type: 'success', message: 'User added successfully' });
             setNewUsername('');
         } catch (error) {
-            setErrorMessage('Error adding user');
-            setShowErrorModal(true);
+            setModal({ type: 'error', message: 'Error adding user' });
         }
     };
 
@@ -34,19 +27,14 @@ const MemberList = ({ taskId, members = [], isOwner, ownerUsername, onMemberChan
         try {
             await removeMember(taskId, { username });
             onMemberChange('remove', username);
-            setSuccessMessage('User removed successfully');
-            setShowSuccessModal(true);
+            setModal({ type: 'success', message: 'User removed successfully' });
         } catch (error) {
-            setErrorMessage('Error removing user');
-            setShowErrorModal(true);
+            setModal({ type: 'error', message: 'Error removing user' });
         }
     };
 
     const closeModal = () => {
-        setShowErrorModal(false);
-        setShowSuccessModal(false);
-        setErrorMessage('');
-        setSuccessMessage('');
+        setModal({ type: null, message: '' });
     };
 
     return (
@@ -92,16 +80,16 @@ const MemberList = ({ taskId, members = [], isOwner, ownerUsername, onMemberChan
                 </div>
             )}
 
-            {showErrorModal && (
+            {modal.type && modal.type === 'error' && (
                 <ErrorModal
-                    message={errorMessage}
+                    message={modal.message}
                     onClose={closeModal}
                 />
             )}
 
-            {showSuccessModal && (
+            {modal.type && modal.type === 'success' && (
                 <SuccessModal
-                    message={successMessage}
+                    message={modal.message}
                     onClose={closeModal}
                 />
             )}

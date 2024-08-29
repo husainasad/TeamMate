@@ -2,13 +2,12 @@ import React, { useState, useContext } from 'react';
 import { loginUser } from '../../services/Api';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../Auth/AuthContext';
-import ErrorModal from '../Tasks/ErrorModal';
+import { ErrorModal } from '../Tasks/FeedbackModal';
 
 const Login = () => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
-    const [showErrorModal, setShowErrorModal] = useState(false);
-    const [errorMessage, setErrorMessage] = useState('');
+    const [modal, setModal] = useState({ type: null, message: '' });
     const navigate = useNavigate();
     const { login } = useContext(AuthContext);
 
@@ -19,9 +18,12 @@ const Login = () => {
             login(response.data.access, response.data.refresh, username);
             navigate('/');
         } catch (error) {
-            setErrorMessage('Login failed. Please check your credentials and try again.');
-            setShowErrorModal(true);
+            setModal({ type: 'error', message: 'Login failed. Please check your credentials and try again.' });
         }
+    };
+
+    const closeModal = () => {
+        setModal({ type: null, message: '' });
     };
 
     return (
@@ -62,10 +64,10 @@ const Login = () => {
                     </button>
                 </div>
             </div>
-            {showErrorModal && (
+            {modal.type && modal.type === 'error' && (
                 <ErrorModal
-                    message={errorMessage}
-                    onClose={() => setShowErrorModal(false)}
+                    message={modal.message}
+                    onClose={closeModal}
                 />
             )}
         </div>
