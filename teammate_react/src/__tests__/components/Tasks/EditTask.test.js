@@ -17,12 +17,21 @@ jest.mock('./../../../components/Tasks/TaskForm', () => ({ initialData, onSubmit
     <button onClick={onCancel}>Cancel</button>
   </div>
 ));
+jest.mock('./../../../components/Tasks/FeedbackModal', () => ({
+  ErrorModal: ({ message, onClose }) => (
+    <div>
+      <div>Error: {message}</div>
+      <button onClick={onClose}>Close</button>
+    </div>
+  ),
+}));
 
 describe('EditTask Component', () => {
   const navigateMock = jest.fn();
 
   beforeEach(() => {
     useNavigate.mockReturnValue(navigateMock);
+    jest.clearAllMocks();
   });
 
   const renderComponent = () =>
@@ -34,12 +43,11 @@ describe('EditTask Component', () => {
 
   test('renders EditTask component with loading state', async () => {
     getTaskById.mockResolvedValueOnce({ data: { title: 'Sample Task' } });
-    
+
     renderComponent();
-    
-    // Using getAllByText to handle multiple elements with 'Loading...' text
-    const loadingElements = screen.getAllByText('Loading...');
-    expect(loadingElements.length).toBeGreaterThan(0); // Ensuring loading state is displayed
+
+    screen.getAllByText('Loading...');
+
     await waitFor(() => expect(screen.queryByText('Loading...')).not.toBeInTheDocument());
   });
 
@@ -56,7 +64,7 @@ describe('EditTask Component', () => {
 
     renderComponent();
 
-    await waitFor(() => expect(screen.getByText('Error fetching task')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText('Error: Error fetching task')).toBeInTheDocument());
   });
 
   test('successful task editing navigates to home page', async () => {
@@ -73,8 +81,7 @@ describe('EditTask Component', () => {
     expect(navigateMock).toHaveBeenCalledWith('/');
   });
 
-  test('displays error alert on failed task editing', async () => {
-    global.alert = jest.fn();
+  test('displays error modal on failed task editing', async () => {
     getTaskById.mockResolvedValueOnce({ data: { title: 'Sample Task' } });
     editTask.mockRejectedValueOnce(new Error('Failed to update task'));
 
@@ -84,7 +91,7 @@ describe('EditTask Component', () => {
 
     fireEvent.click(screen.getByText('Submit'));
 
-    await waitFor(() => expect(global.alert).toHaveBeenCalledWith('Error updating task'));
+    await waitFor(() => expect(screen.getByText('Error: Error updating task')).toBeInTheDocument());
   });
 
   test('clicking "Cancel" navigates to home page', async () => {

@@ -2,9 +2,10 @@ import React from 'react';
 import { render, screen, waitFor, act, fireEvent } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import TaskDetails from './../../../components/Tasks/TaskDetails';
-import { getTaskById, deleteTask, addMember, removeMember } from './../../../services/Api';
+import { getTaskById, deleteTask } from './../../../services/Api';
 import { AuthContext } from './../../../components/Auth/AuthContext';
-import TaskMembers from './../../../components/Tasks/TaskMembers';
+import MemberList from './../../../components/Tasks/MemberList';
+import { ErrorModal, SuccessModal } from './../../../components/Tasks/FeedbackModal';
 import { useNavigate, useParams } from 'react-router-dom';
 
 jest.mock('./../../../services/Api');
@@ -13,20 +14,36 @@ jest.mock('react-router-dom', () => ({
     useNavigate: jest.fn(),
     useParams: jest.fn(),
 }));
-jest.mock('./../../../components/Tasks/TaskMembers', () => ({ members, onRemoveMember, onAddMember, isOwner }) => (
+jest.mock('./../../../components/Tasks/MemberList', () => ({ members, onMemberChange, isOwner, taskId }) => (
     <div>
         <div>Members List:</div>
         {members.map(member => (
             <div key={member.user}>
                 {member.user}
-                {isOwner && <button onClick={() => onRemoveMember(member.user)}>Remove</button>}
+                {isOwner && (
+                    <button onClick={() => onMemberChange('remove', member.user)}>Remove</button>
+                )}
             </div>
         ))}
         {isOwner && (
-            <button onClick={() => onAddMember('newuser')}>Add Member</button>
+            <button onClick={() => onMemberChange('add', { user: 'newuser' })}>Add Member</button>
         )}
     </div>
 ));
+jest.mock('./../../../components/Tasks/FeedbackModal', () => ({
+    ErrorModal: ({ message, onClose }) => (
+        <div>
+            <div>Error: {message}</div>
+            <button onClick={onClose}>Close</button>
+        </div>
+    ),
+    SuccessModal: ({ message, onClose }) => (
+        <div>
+            <div>Success: {message}</div>
+            <button onClick={onClose}>Close</button>
+        </div>
+    ),
+}));
 
 describe('TaskDetails Component', () => {
     const navigateMock = jest.fn();
@@ -42,7 +59,7 @@ describe('TaskDetails Component', () => {
         members: [{ user: 'member1' }]
     };
     const mockUser = { username: 'testuser' };
-    
+
     beforeAll(() => {
         window.alert = jest.fn();
     });
@@ -51,6 +68,7 @@ describe('TaskDetails Component', () => {
         jest.clearAllMocks();
         useNavigate.mockReturnValue(navigateMock);
         useParams.mockReturnValue({ id: '1' });
+        jest.useFakeTimers();
     });
 
     const renderComponent = (isAuthenticated) =>
@@ -83,7 +101,7 @@ describe('TaskDetails Component', () => {
         });
 
         await waitFor(() =>
-            expect(screen.getByText('Failed to fetch task. Please try again later.')).toBeInTheDocument()
+            expect(screen.getByText('Error: Failed to fetch task. Please try again later.')).toBeInTheDocument()
         );
     });
 
@@ -104,7 +122,7 @@ describe('TaskDetails Component', () => {
         });
     });
 
-    test('handles task deletion', async () => {
+    test('handles task deletion and shows success modal', async () => {
         getTaskById.mockResolvedValueOnce({ data: mockTask });
         deleteTask.mockResolvedValueOnce({});
 
@@ -114,13 +132,19 @@ describe('TaskDetails Component', () => {
 
         fireEvent.click(screen.getByText('Delete Task'));
 
+        await waitFor(() => {
+            expect(screen.getByText('Success: Task deleted successfully')).toBeInTheDocument();
+        });
+
+        act(() => {
+            jest.runAllTimers();
+        });
+
         await waitFor(() => expect(navigateMock).toHaveBeenCalledWith('/'));
     });
 
     test('handles adding and removing members', async () => {
         getTaskById.mockResolvedValueOnce({ data: mockTask });
-        addMember.mockResolvedValueOnce({ data: { user: 'newuser' } });
-        removeMember.mockResolvedValueOnce({});
 
         await act(async () => {
             renderComponent(true);
@@ -135,7 +159,6 @@ describe('TaskDetails Component', () => {
         await waitFor(() => expect(screen.getByText('newuser')).toBeInTheDocument());
 
         const removeButtons = screen.queryAllByText('Remove');
-
         expect(removeButtons.length).toBe(2);
         
         fireEvent.click(removeButtons[0]);

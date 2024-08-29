@@ -22,6 +22,7 @@ describe('AddTask Component', () => {
 
   beforeEach(() => {
     useNavigate.mockReturnValue(navigateMock);
+    jest.clearAllMocks();
   });
 
   const renderComponent = () =>
@@ -56,8 +57,8 @@ describe('AddTask Component', () => {
 
     fireEvent.click(screen.getByText('Submit'));
 
-    await waitFor(() => expect(screen.getByText('Error adding task')).toBeInTheDocument());
-    expect(screen.getByText('Error adding task')).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByText('Error Adding Task. Please try again.')).toBeInTheDocument());
+    expect(screen.getByText('Error Adding Task. Please try again.')).toBeInTheDocument();
   });
 
   test('displays loading state while adding a task', async () => {
