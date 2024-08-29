@@ -2,24 +2,28 @@ import React, { useState, useContext } from 'react';
 import { loginUser } from '../../services/Api';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../Auth/AuthContext';
+import { ErrorModal } from '../Tasks/FeedbackModal';
 
 const Login = () => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
-    const [error, setError] = useState('');
+    const [modal, setModal] = useState({ type: null, message: '' });
     const navigate = useNavigate();
     const { login } = useContext(AuthContext);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setError('');
         try {
             const response = await loginUser({ username, password });
             login(response.data.access, response.data.refresh, username);
             navigate('/');
         } catch (error) {
-            setError('Login failed. Please check your credentials and try again.');
+            setModal({ type: 'error', message: 'Login failed. Please check your credentials and try again.' });
         }
+    };
+
+    const closeModal = () => {
+        setModal({ type: null, message: '' });
     };
 
     return (
@@ -49,7 +53,6 @@ const Login = () => {
                     >
                         Login
                     </button>
-                    {error && <p className="text-red-500 text-center">{error}</p>}
                 </form>
                 <div className="mt-4 text-center">
                     <p>Not Registered?</p>
@@ -61,6 +64,12 @@ const Login = () => {
                     </button>
                 </div>
             </div>
+            {modal.type && modal.type === 'error' && (
+                <ErrorModal
+                    message={modal.message}
+                    onClose={closeModal}
+                />
+            )}
         </div>
     );
 };

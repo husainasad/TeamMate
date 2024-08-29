@@ -1,16 +1,18 @@
 import React, { useEffect, useState, useContext } from 'react';
-import { getTaskById, deleteTask, addMember, removeMember } from '../../services/Api';
+import { getTaskById, deleteTask } from '../../services/Api';
 import { useParams, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../Auth/AuthContext';
-import TaskMembers from './TaskMembers';
+import MemberList from './MemberList';
+import { ErrorModal, SuccessModal} from '../Tasks/FeedbackModal';
 
 const TaskDetails = () => {
     const { id } = useParams();
     const navigate = useNavigate();
     const [task, setTask] = useState({ tags: [], members: [] });
-    const [message, setMessage] = useState({ error: null, success: null });
+    const [modal, setModal] = useState({ type: null, message: '' });
     const [loading, setLoading] = useState(true);
-    const [membersVisible, setMembersVisible] = useState(false); // State for dropdown visibility
+    const [membersVisible, setMembersVisible] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
     const { isAuthenticated, user } = useContext(AuthContext);
 
     useEffect(() => {
@@ -24,7 +26,7 @@ const TaskDetails = () => {
                 const response = await getTaskById(id);
                 setTask(response.data);
             } catch (error) {
-                setMessage({ error: 'Failed to fetch task. Please try again later.', success: null });
+                setModal({ type: 'error', message: 'Failed to fetch task. Please try again later.' });
             } finally {
                 setLoading(false);
             }
@@ -34,42 +36,34 @@ const TaskDetails = () => {
     }, [isAuthenticated, navigate, id]);
 
     const handleDelete = async () => {
+        setIsDeleting(true);
         try {
             await deleteTask(id);
-            alert('Task deleted successfully');
-            navigate('/');
+            setModal({ type: 'success', message: 'Task deleted successfully' });
+            setTimeout(() => navigate('/'), 1500);
         } catch (error) {
-            alert('Error deleting task');
+            setModal({ type: 'error', message: 'Error deleting task' });
+        } finally {
+            setIsDeleting(false);
         }
     };
 
-    const handleAddMember = async (username) => {
-        try {
-            const response = await addMember(id, { username });
-            const newMember = response.data;
+    const handleMemberChange = (action, memberOrUsername) => {
+        if (action === 'add') {
             setTask(prevTask => ({
                 ...prevTask,
-                members: Array.isArray(prevTask.members) ? [...prevTask.members, newMember] : [newMember]
+                members: [...prevTask.members, memberOrUsername]
             }));
-        } catch (error) {
-            setMessage({ error: 'Error adding user', success: null });
+        } else if (action === 'remove') {
+            setTask(prevTask => ({
+                ...prevTask,
+                members: prevTask.members.filter(member => member.user !== memberOrUsername)
+            }));
         }
     };
 
-    const handleRemoveMember = async (username) => {
-        try {
-            await removeMember(id, { username });
-            setTask(prevTask => {
-                const updatedMembers = prevTask.members.filter(member => member.user !== username);
-                return {
-                    ...prevTask,
-                    members: updatedMembers
-                };
-            });
-            setMessage({ error: null, success: 'User removed successfully' });
-        } catch (error) {
-            setMessage({ error: 'Error removing user', success: null });
-        }
+    const closeModal = () => {
+        setModal({ type: null, message: '' });
     };
 
     const isOwner = task.owner === user?.username;
@@ -91,7 +85,7 @@ const TaskDetails = () => {
             <div className="bg-white shadow-lg rounded-md p-6 mb-6">
                 <div className="flex justify-between items-center mb-4">
                     <h2 className="text-2xl font-bold mb-4">
-                        {loading ? 'Loading task details...' : message.error ? 'Error loading task' : `${task.title} Details`}
+                        {loading ? 'Loading task details...' : modal.type === 'error' ? 'Error loading task' : `${task.title} Details`}
                     </h2>
                     <div className="space-x-2">
                         <button
@@ -105,17 +99,14 @@ const TaskDetails = () => {
                             <button
                                 type="button"
                                 onClick={handleDelete}
-                                className="bg-red-500 text-white p-2 rounded-md hover:bg-red-600 transition"
+                                disabled={isDeleting}
+                                className={`bg-red-500 text-white p-2 rounded-md hover:bg-red-600 transition ${isDeleting ? 'opacity-50 cursor-not-allowed' : ''}`}
                             >
                                 Delete Task
                             </button>
                         )}
                     </div>
                 </div>
-                
-                {message.error && <p className="text-red-500 mb-4 text-center">{message.error}</p>}
-                {message.success && <p className="text-green-500 mb-4 text-center">{message.success}</p>}
-                
                 <div className="task-details mb-6">
                     <div className="mb-4">
                         <h3 className="text-xl font-semibold">Title:</h3>
@@ -160,15 +151,29 @@ const TaskDetails = () => {
                     </button>
                 </div>
                 {membersVisible && (
-                    <TaskMembers
+                    <MemberList
+                        taskId = {id}
                         members={task.members || []}
                         isOwner={isOwner}
                         ownerUsername={task.owner}
-                        onRemoveMember={handleRemoveMember}
-                        onAddMember={handleAddMember}
+                        onMemberChange={handleMemberChange}
                     />
                 )}
             </div>
+            
+            {modal.type && modal.type === 'error' && (
+                <ErrorModal
+                    message={modal.message}
+                    onClose={closeModal}
+                />
+            )}
+
+            {modal.type && modal.type === 'success' && (
+                <SuccessModal
+                    message={modal.message}
+                    onClose={closeModal}
+                />
+            )}
         </div>
     );
 };

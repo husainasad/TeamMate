@@ -2,29 +2,32 @@ import React, { useState } from 'react';
 import { addTask } from '../../services/Api';
 import { useNavigate } from 'react-router-dom';
 import TaskForm from './TaskForm';
+import { ErrorModal } from '../Tasks/FeedbackModal';
 
 const AddTask = () => {
     const navigate = useNavigate();
     const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState(null);
+    const [modal, setModal] = useState({ type: null, message: '' });
 
     const handleAddTask = async (taskData) => {
         setIsLoading(true);
-        setError(null);
         try {
             await addTask(taskData);
             navigate('/');
         } catch (error) {
-            setError('Error adding task');
+            setModal({ type: 'error', message: 'Error Adding Task. Please try again.' });
         } finally {
             setIsLoading(false);
         }
     };
 
+    const closeModal = () => {
+        setModal({ type: null, message: '' });
+    };
+
     return (
         <div className="p-6 max-w-lg mx-auto bg-white shadow-md rounded-md">
             <h2 className="text-2xl font-bold mb-4">Add New Task</h2>
-            {error && <p className="text-red-500 mb-4">{error}</p>}
             {isLoading ? (
                 <p>Loading...</p>
             ) : (
@@ -32,6 +35,12 @@ const AddTask = () => {
                     initialData={{}}
                     onSubmit={handleAddTask}
                     onCancel={() => navigate('/')}
+                />
+            )}
+            {modal.type && modal.type === 'error' && (
+                <ErrorModal
+                    message={modal.message}
+                    onClose={closeModal}
                 />
             )}
         </div>

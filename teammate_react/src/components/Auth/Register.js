@@ -1,23 +1,27 @@
 import React, { useState } from 'react';
 import { registerUser } from '../../services/Api';
 import { useNavigate } from 'react-router-dom';
+import { ErrorModal } from '../Tasks/FeedbackModal';
 
 const Register = () => {
     const [username, setUsername] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const [error, setError] = useState('');
+    const [modal, setModal] = useState({ type: null, message: '' });
     const navigate = useNavigate();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setError('');
         try {
             await registerUser({ username, email, password });
             navigate('/login');
         } catch (error) {
-            setError('Registration failed. Please try again.');
+            setModal({ type: 'error', message: 'Registration failed. Please try again.' });
         }
+    };
+
+    const closeModal = () => {
+        setModal({ type: null, message: '' });
     };
 
     return (
@@ -54,7 +58,6 @@ const Register = () => {
                     >
                         Register
                     </button>
-                    {error && <p className="text-red-500 text-center">{error}</p>}
                 </form>
                 <div className="mt-4 text-center">
                     <p>Already a user?</p>
@@ -66,6 +69,12 @@ const Register = () => {
                     </button>
                 </div>
             </div>
+            {modal.type && modal.type === 'error' && (
+                <ErrorModal
+                    message={modal.message}
+                    onClose={closeModal}
+                />
+            )}
         </div>
     );
 };
