@@ -2,11 +2,13 @@ import React, { useEffect, useState, useContext } from 'react';
 import { getMemberTasks } from '../../services/Api';
 import { useNavigate, Link } from 'react-router-dom';
 import { AuthContext } from '../Auth/AuthContext';
+import ErrorModal from '../Tasks/ErrorModal';
 
 const TaskList = () => {
     const [tasks, setTasks] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState('');
+    const [showErrorModal, setShowErrorModal] = useState(false);
+    const [errorMessage, setErrorMessage] = useState('');
     const { isAuthenticated } = useContext(AuthContext);
     const navigate = useNavigate();
 
@@ -21,7 +23,8 @@ const TaskList = () => {
                 const responseArray = Array.isArray(response.data) ? response.data : [];
                 setTasks(responseArray);
             } catch (error) {
-                setError('Failed to fetch tasks. Please try again later.');
+                setErrorMessage('Failed to fetch tasks. Please try again later.');
+                setShowErrorModal(true);
             } finally {
                 setLoading(false);
             }
@@ -32,10 +35,6 @@ const TaskList = () => {
 
     if (loading) {
         return <p className="text-center">Loading tasks...</p>;
-    }
-
-    if (error) {
-        return <p className="text-red-500 text-center">{error}</p>;
     }
 
     return (
@@ -83,6 +82,12 @@ const TaskList = () => {
             ) : (
                 <p className="text-center">No tasks available.</p>
             )}
+            {showErrorModal && (
+        <ErrorModal
+            message={errorMessage}
+            onClose={() => setShowErrorModal(false)}
+        />
+    )}
         </div>
     );
 };

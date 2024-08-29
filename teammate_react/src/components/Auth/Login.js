@@ -2,23 +2,25 @@ import React, { useState, useContext } from 'react';
 import { loginUser } from '../../services/Api';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../Auth/AuthContext';
+import ErrorModal from '../Tasks/ErrorModal';
 
 const Login = () => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
-    const [error, setError] = useState('');
+    const [showErrorModal, setShowErrorModal] = useState(false);
+    const [errorMessage, setErrorMessage] = useState('');
     const navigate = useNavigate();
     const { login } = useContext(AuthContext);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setError('');
         try {
             const response = await loginUser({ username, password });
             login(response.data.access, response.data.refresh, username);
             navigate('/');
         } catch (error) {
-            setError('Login failed. Please check your credentials and try again.');
+            setErrorMessage('Login failed. Please check your credentials and try again.');
+            setShowErrorModal(true);
         }
     };
 
@@ -49,7 +51,6 @@ const Login = () => {
                     >
                         Login
                     </button>
-                    {error && <p className="text-red-500 text-center">{error}</p>}
                 </form>
                 <div className="mt-4 text-center">
                     <p>Not Registered?</p>
@@ -61,6 +62,12 @@ const Login = () => {
                     </button>
                 </div>
             </div>
+            {showErrorModal && (
+                <ErrorModal
+                    message={errorMessage}
+                    onClose={() => setShowErrorModal(false)}
+                />
+            )}
         </div>
     );
 };
