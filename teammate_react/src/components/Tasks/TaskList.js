@@ -82,7 +82,8 @@ const TaskList = () => {
     const sortedTasks = sortTasks(filteredTasks, sortCriteria, sortOrder);
 
     return (
-        <div className="p-4 max-w-4xl mx-auto">
+        // <div className="p-4 max-w-4xl mx-auto">
+        <div className="p-4 max-w-full md:max-w-4xl mx-auto">
             <div className="flex justify-between items-center mb-4">
                 <h2 className="text-2xl font-bold">Tasks</h2>
                 <button
@@ -103,26 +104,20 @@ const TaskList = () => {
                                     className="p-2 border-b text-center cursor-pointer"
                                     onClick={() => handleSortChange('priority')}
                                 >
-                                    <span className="flex items-center">
-                                        Priority {renderSortArrow('priority')}
-                                    </span>
+                                    Priority {renderSortArrow('priority')}
                                 </th>
                                 <th
                                     className="p-2 border-b text-center cursor-pointer"
                                     onClick={() => handleSortChange('due_date')}
                                 >
-                                    <span className="flex items-center">
-                                        Due Date {renderSortArrow('due_date')}
-                                    </span>
+                                    Due Date {renderSortArrow('due_date')}
                                 </th>
                                 <th className="p-2 border-b text-center">Tags</th>
                                 <th
                                     className="p-2 border-b text-center cursor-pointer"
                                     onClick={() => handleSortChange('progress')}
                                 >
-                                    <span className="flex items-center">
-                                        Progress {renderSortArrow('progress')}
-                                    </span>
+                                    Progress {renderSortArrow('progress')}
                                 </th>
                             </tr>
                         </thead>
